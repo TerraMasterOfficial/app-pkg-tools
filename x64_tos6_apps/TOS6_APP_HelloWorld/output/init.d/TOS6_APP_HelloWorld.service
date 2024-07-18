@@ -1,6 +1,6 @@
 [Unit]
 Description=your application description
-Documentation=https://github.com/TerraMasterDevTeam/app-pkg-tools/blob/main/Manual.md
+Documentation=https://github.com/TerraMasterOfficial/app-pkg-tools/blob/main/Manual.md
 After=TOSDaemon.service
 
 [Service]
