@@ -1,11 +1,13 @@
-# TOS 5 Application Development Guide - v1.1
+# TOS 6 Native Application Development Guide - v1.0
 
 ## Overview
 
-> The id of the app is the unique identifier of the app; the appid in the document all represents the id of the app.
+Unlike TOS 5, TOS 6 adopts a root file system that is fully compatible with Ubuntu 22.04. Similar to Ubuntu, the booting, shutdown, and application hosting of the TOS 6 system are all managed by systemd. Therefore, the way applications are launched and hosted in TOS 6 is slightly different from the past. If you plan to develop native applications that run on TOS 6, please refer to the following development guidelines.
+
+> The id of the application is the unique identifier of the application; the 'appid' in the document all represents the id of the application.
 > ![image](Application.png)
 
-## 1、config.ini：Configuration file: config.ini (required)
+## 1¡¢config.ini£ºConfiguration file: config.ini (required)
 
 #### config.ini is in json format
 ```json
@@ -23,13 +25,13 @@
   "state": false,
   "type": "iframe",
   "help": "",
-  "version": "2.4.8",
+  "version": "x.x.xxx",
   "recommend": true,
   "beta": true,
   "category": "Utilities",
   "depend": [],
   "platform": "x86_64",
-  "low_version": "5.0.0",
+  "low_version": "6.0.0",
   "reset": false,
   "official": "",
   "maxmin":true,
@@ -42,23 +44,23 @@
 ```
 #### Field Description
 
-`id` : The unique feature of the app, which can only be composed of uppercase and lowercase letters and numbers, namely appid
+`id` : The unique feature of the application, which can only be composed of uppercase and lowercase letters and numbers, namely appid
 
 `md5` : Leave blank by default, the packaging tool will automatically generate the md5 value
 
-`path` : The default entry path for the app. By default, a path named with the app id is generated in the root directory of the app
+`path` : The default entry path for the application. By default, a path named with the application id is generated in the root directory of the application
 
-`icon` : The path where the app's desktop icon is stored. The default is at  _site/images/icons/appid.svg_
+`icon` : The path where the application's desktop icon is stored. The default is at  _site/images/icons/appid.svg_
 
-`name` : The name of the app. Can be left blank, the system will automatically load the name from appid.lang
+`name` : The name of the application. Can be left blank, the system will automatically load the name from appid.lang
 
-`exec` : Whether the app has a startup script, value: true/false
+`exec` : Whether the application has a startup script, value: true/false
 
-`user`: Create and specify a user to run the app; Leave blank to use the default user
+`user`: Create and specify a user to run the application; Leave blank to use the default user
 
 `group`: Create and specify a user group for the user you created; Leave blank to use the default group (allusers)
 
-`open_path` : Whether the app needs to be opened in a new window, value: true/false
+`open_path` : Whether the application needs to be opened in a new window, value: true/false
 
 `resize` : Used to define whether the front-end pop-up window can be resized; This is only valid when a non-new window is opened
 
@@ -68,109 +70,63 @@
 
 `type` : use default: iframe
 
-`help` : the URL of the app's help documentation; if it does not exist, leave it blank
+`help` : the URL of the application's help documentation; if it does not exist, leave it blank
 
-`version` : the version information of the app
+`version` : the version information of the application
 
-`recommend` : Marks whether the app is a recommended app. Value: true/false
+`recommend` : Marks whether the application is a recommended application. Value: true/false
 
-`beta` : mark whether the app is a beta version; value: true/false
+`beta` : mark whether the application is a beta version; value: true/false
 
-`category` : The category of the app. There are 6 values:   Utilities, Security, Multimedia, Development_tools, Business, Backup
+`category` : The category of the application. There are 6 values: Utilities, Security, Multimedia, Development_Tools, Business, Backup
 
-`depend` : Whether the operation of the app depends on other applications, fill in the id of the dependent application here. For example: if the app needs to rely on mysql, fill in ["mysql"]
+`depend` : Whether the operation of the application depends on other applications, fill in the id of the dependent application here. For example: if the application needs to rely on mysql, fill in ["mysql"]
 
 `platform` : The platform to run on. Value: x86_64/aarch64
 
-`low_version` : Defines the minimum requirement for the TOS version. Apps are only available to compliant TOS systems
+`low_version` : Defines the minimum requirement for the TOS version. Applications are only available to compliant TOS systems
 
-`reset` : Whether the app has a reset function, value: true/false
+`reset` : Whether the application has a reset function, value: true/false
 
 `official` : the official website of the application
 
-`cli` : When the app is a command-line tool, it is used to register it with the routing of the TOS system
+`cli` : When the application is a command-line tool, it is used to register it with the routing of the TOS system
 
 
-## 2. init.d/service: startup script
+## 2. init.d/MyService.service: service block
 
-> Optional; This script is valid only when the exec value in config.ini is true;
-The path and filename are fixed, and apps that do not require a startup script can ignore this option; the following is an example of the format of a standard startup script:
+> Optional: This service block is only effective when the value of exec in config.ini is true. Some applications may not need to be managed by the system, such as php_script, go, python.
 
-```shell
-#!/bin/bash
+```service
+[Unit] Section
+Description: A short description of the service.
+Documentation: Web documentation related to the service, which can include multiple URL addresses.
+Requires: Defines strong dependencies required by the service. If any of the required services fail to start, this service will also fail to start.
+Wants: Defines weak dependencies required by the service. Even if any of the dependent services fail to start, this service will still continue to start.
+BindsTo: Defines binding relationships for the service. If the bound service stops, this service will also stop.
+PartOf: If PartOf is set, when other units are stopped or restarted, this unit will also be stopped or restarted.
+Conflicts: Defines conflict relationships for the service. If a conflicting service starts, this service will stop.
+Before and After: Define the order in which services are started.
+OnFailure: Sets other units to start when this unit fails.
 
-#Load system global environment variables
-source /etc/profile >/dev/null
+[Service] Section
+Type: Defines the type of service, which can be simple, forking, oneshot, dbus, notify, or idle.
+ExecStart: Defines the command to run when starting the service.
+ExecStartPre and ExecStartPost: Define commands to run before and after the ExecStart command.
+ExecReload: Defines the command to run when reloading the service configuration.
+ExecStop: Defines the command to run when stopping the service.
+Restart: Defines when the service should automatically restart, which can be no (the default), on-success, on-failure, on-abnormal, on-watchdog, on-abort, or always.
+User and Group: Define the user and group used to run the service.
+Environment, EnvironmentFile, and PassEnvironment: Set environment variables for the service.
+WorkingDirectory: Sets the working directory for the service.
 
-#Read the installation location of the current application
-InstallPath=$(dirname $(dirname $(readlink -f $0)))
+[Install] Section
+Alias: Defines an alias for the service, which can be used to enable or disable the service.
+WantedBy, RequiredBy, WantedBy, PartOf, BoundBy: Used to add the service to other targets.
+Also: When one unit is enabled or disabled, other units will also be enabled or disabled.
 
-#Switch the current location to the installation directory of the app
-cd $InstallPath
-
-service_init() {
-    # If the application needs to store data, 
-    # Please use the system interface to create an application-owned shared directory
-    ter_share_add -name XXX -owner YYY
-    # -name: The name of the directory where the data is stored
-    # -owner: The owner of the allocation directory, the default is super user
-    # return: Returns the absolute path of the directory
-}
-
-service_start() {
-    service_init
-    # service start
-}
-
-service_stop() {
-
-}
-
-service_restart() {
-
-}
-
-service_status() {
-    #if app running, print running
-    #if app stopped, print stopped
-}
-
-#If the reset value in config.ini is true, please add this method:
-service_reset() {
-
-}
-
-#If the app occupies the system port, please add this method:
-service_getport() {
-
-}
-
-case $1 in
-
-start)
-    service_start
-    ;;
-stop)
-    service_stop
-    ;;
-restart)
-    service_restart
-    ;;
-status)
-    service_status
-    ;;
-reset)
-    service_reset
-    ;;
-getport)
-    service_getport
-    ;;
-*)
-    echo "usage: name {start|stop|restart|status|reset}"
-    exit 1
-    ;;
-esac
-exit $?
+Official Documentation: https://www.freedesktop.org/software/systemd/man/latest/index.html
+Chinese Documentation: https://www.jinbuguo.com/systemd/systemd.index.html
 ```
 
 ## 3. Related scripts in the directory scripts
@@ -187,38 +143,38 @@ exit $?
 If the front-end UI needs other icons or images, the icons or images must be stored in the appid subdirectory under this directory (used to isolate the icons that the application depends on), the directory structure is as follows:
 
 ```
-├── images
-│   ├── appid
-│   │   └── *.svg #Store the icons or images required by the front end
-│   └── icons
-│       └── appid.png
+©À©¤©¤ images
+©¦   ©À©¤©¤ appid
+©¦   ©¦   ©¸©¤©¤ *.svg #Store the icons or images required by the front end
+©¦   ©¸©¤©¤ icons
+©¦       ©¸©¤©¤ appid.png
 ```
 
 ## 6. Directory config
 
-> Used to hold some other configuration related to the app; As long as the startup script can load and configure them.
+> Used to hold some other configuration related to the application; As long as the startup script can load and configure them.
 
-## 7. Multilingual configuration of app name and description
+## 7. Multilingual configuration of application name and description
 
 > appid.lang, the format is as follows:
 
 ```
 [zh-cn]
-name = "app name" # app name
+name = "application name" # application name
 auth = "TerraMaster" # developer
-version = 2.4.8 #App version
-description = "" #App description
+version = 2.4.008 #application version
+description = "" #application description
 
 [zh-hk]
-name = "app name"
+name = "application name"
 auth = "TerraMaster"
-version = 2.4.8
+version = 2.4.008
 descript = ""
 
 [en-us]
-name = "app name"
+name = "application name"
 auth = "TerraMaster"
-version = 2.4.8
+version = 2.4.008
 descript = ""
 
 ...and some other languages, here is a list of some of the existing languages:
@@ -243,7 +199,7 @@ You can choose to add other languages
 
 ## 8. A detailed explanation of webui.bz2
 
-> Inside the tar package is the front-end interface of the app.
+> Inside the tar package is the front-end interface of the application.
 It is in the form of a tar package to ensure the integrity of the updated application.
 
 ## 9. A detailed explanation of lang.bz2
@@ -328,11 +284,11 @@ key3 = "value"
 ]
 ```
 #### Field Description
-`id` : the unique identifier of the app function module;
+`id` : the unique identifier of the application function module;
 
-`icon` : the icon displayed by the app function module, the storage location refers to the description of "directory images";
+`icon` : the icon displayed by the application function module, the storage location refers to the description of "directory images";
 
-`name` : The translation variable of the name of the app function module, please refer to the description of "lang.bz2";
+`name` : The translation variable of the name of the application function module, please refer to the description of "lang.bz2";
 
 `type` : default: iframe;
 
@@ -360,5 +316,5 @@ export PATH="${PATH}:${AppBin}"
 
 ## 12. Map to TOS configuration (sysroot directory)
 
->Optional; when installing the app, link all the files in this directory to the corresponding directory in the TOS system; this option is valid for those dependent libraries that cannot be found.
+>Optional; when installing the application, link all the files in this directory to the corresponding directory in the TOS system; this option is valid for those dependent libraries that cannot be found.
 Note: Lazy configuration is not recommended (that is, put the entire application in this directory for mapping)

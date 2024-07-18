@@ -1,4 +1,4 @@
-target=TOS5_APP_HelloWorld
+target=TOS6_APP_HelloWorld
 
 init:
 	go mod tidy

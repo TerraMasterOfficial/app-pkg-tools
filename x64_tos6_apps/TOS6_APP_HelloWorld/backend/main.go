@@ -44,10 +44,10 @@ func main() {
 	route := gin.New()
 	route.Use(gin.Recovery(), gin.Logger())
 
-	g := route.Group("/TOS5_APP_HelloWorld")
+	g := route.Group("/TOS6_APP_HelloWorld")
 	{
 		g.GET("/", resp.WrapResp(func(c *gin.Context) (interface{}, error) {
-			return "Hello TOS5 Application", nil
+			return "Hello TOS6 Application", nil
 		}))
 
 		g.GET("/welcome", resp.WrapResp(func(c *gin.Context) (interface{}, error) {
@@ -55,7 +55,7 @@ func main() {
 		}))
 	}
 
-	sockFile := "/var/api/TOS5_APP_HelloWorld.sock"
+	sockFile := "/var/api/TOS6_APP_HelloWorld.sock"
 	go func() {
 		ch := make(chan os.Signal)
 		signal.Notify(ch, unix.SIGINT, unix.SIGTERM, unix.SIGQUIT, unix.SIGHUP)
