@@ -5,20 +5,20 @@
 TOS 7 adopts a **Container-first** strategy while maintaining full support for native Deb applications. The platform recommends the following decision framework:
 
 ```
-                    ┌─────────────────────────────────┐
+                    ┌──────────────────────────────────┐
                     │ Does your application require    │
                     │ an isolated runtime environment? │
-                    └──────────────┬──────────────────┘
+                    └──────────────┬───────────────────┘
                                    │
                     ┌──────────────▼──────────────┐        
                     │  Yes                    No   │    
                     │                             │              
                     ▼                             ▼              
-              ┌──────────┐           ┌──────────────────────┐      
-              │ Docker   │           │ Is it a TOS standard  │  
-              │ App      │           │ service or lightweight │      
-              │          │           │ tool?                  │      
-              └──────────┘           └──────────┬────────────┘      
+              ┌──────────┐           ┌─────────────────────────┐      
+              │ Docker   │           │ Is it a TOS standard    │  
+              │ App      │           │ service or lightweight  │      
+              │          │           │ tool?                   │      
+              └──────────┘           └──────────┬──────────────┘      
                                        ┌────────▼──────┐         
                                        │ Yes           │ No      
                                        ▼               ▼         
