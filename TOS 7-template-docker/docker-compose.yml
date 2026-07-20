@@ -1,0 +1,33 @@
+version: "3.8"
+services:
+  myapp-docker:
+    # 👇 Replace with your Docker Hub image
+    image: nginx:1.25-alpine
+    container_name: myapp-docker
+    restart: unless-stopped
+    volumes:
+      # Persistent config directory
+      - /Volume1/docker/myapp-docker/config:/config
+      # Persistent data directory
+      - /Volume1/docker/myapp-docker/data:/data
+    ports:
+      # Map host port to container port (use ports from recommended range: 8000-19999)
+      - "8080:80"
+    environment:
+      - TZ=${TZ:-Asia/Shanghai}
+      - PUID=1000
+      - PGID=1000
+    # Required: Non-root user
+    user: "${PUID:-1000}:${PGID:-1000}"
+    # Health check
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# Platform metadata (required for Docker apps with Web UI)
+x-app-meta:
+  web:
+    port: 8080
+    protocol: http

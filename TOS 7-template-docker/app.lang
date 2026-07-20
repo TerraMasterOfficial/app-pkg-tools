@@ -1,0 +1,97 @@
+[en-us]
+name = "MyApp Docker"
+auth = "Your Name"
+descript = "A TOS 7 Docker application built with the Docker template. Provides a web interface via Docker container."
+release_note = "1. Initial release."
+important = "Requires DockerEngine to be installed from the TOS App Center."
+
+[zh-cn]
+name = "我的 Docker 应用"
+auth = "你的名字"
+descript = "使用 Docker 模板构建的 TOS 7 Docker 应用。通过 Docker 容器提供 Web 界面。"
+release_note = "1. 首次发布。"
+important = "需要从 TOS 应用中心安装 DockerEngine。"
+
+[zh-hk]
+name = "我的 Docker 應用"
+auth = "你的名字"
+descript = "使用 Docker 模板構建的 TOS 7 Docker 應用。通過 Docker 容器提供 Web 界面。"
+release_note = "1. 首次發佈。"
+important = ""
+
+[fr-fr]
+name = "MyApp Docker"
+auth = "Your Name"
+descript = "Une application Docker TOS 7 créée avec le modèle Docker. Fournit une interface web via un conteneur Docker."
+release_note = "1. Version initiale."
+important = ""
+
+[de-de]
+name = "MyApp Docker"
+auth = "Your Name"
+descript = "Eine TOS 7 Docker-Anwendung, erstellt mit der Docker-Vorlage. Bietet eine Weboberfläche über Docker-Container."
+release_note = "1. Erstveröffentlichung."
+important = ""
+
+[it-it]
+name = "MyApp Docker"
+auth = "Your Name"
+descript = "Un'applicazione Docker TOS 7 creata con il modello Docker. Fornisce un'interfaccia web tramite container Docker."
+release_note = "1. Versione iniziale."
+important = ""
+
+[es-es]
+name = "MyApp Docker"
+auth = "Your Name"
+descript = "Una aplicación Docker TOS 7 creada con la plantilla Docker. Proporciona una interfaz web mediante contenedor Docker."
+release_note = "1. Versión inicial."
+important = ""
+
+[hu-hu]
+name = "MyApp Docker"
+auth = "Your Name"
+descript = "TOS 7 Docker alkalmazás, a Docker sablonnal létrehozva. Webes felületet biztosít Docker konténeren keresztül."
+release_note = "1. Első kiadás."
+important = ""
+
+[ja-jp]
+name = "MyApp Docker"
+auth = "Your Name"
+descript = "Docker テンプレートで作成された TOS 7 Docker アプリケーション。Docker コンテナ経由で Web インターフェースを提供します。"
+release_note = "1. 初回リリース。"
+important = ""
+
+[ko-kr]
+name = "MyApp Docker"
+auth = "Your Name"
+descript = "Docker 템플릿으로 생성된 TOS 7 Docker 애플리케이션. Docker 컨테이너를 통해 웹 인터페이스를 제공합니다."
+release_note = "1. 최초 릴리스."
+important = ""
+
+[pl-pl]
+name = "MyApp Docker"
+auth = "Your Name"
+descript = "Aplikacja Docker TOS 7 utworzona przy użyciu szablonu Docker. Zapewnia interfejs WWW przez kontener Docker."
+release_note = "1. Pierwsze wydanie."
+important = ""
+
+[ru-ru]
+name = "MyApp Docker"
+auth = "Your Name"
+descript = "Docker-приложение TOS 7, созданное с использованием шаблона Docker. Предоставляет веб-интерфейс через Docker-контейнер."
+release_note = "1. Первый выпуск."
+important = ""
+
+[tr-tr]
+name = "MyApp Docker"
+auth = "Your Name"
+descript = "Docker şablonu ile oluşturulmuş bir TOS 7 Docker uygulaması. Docker konteyneri aracılığıyla web arayüzü sağlar."
+release_note = "1. İlk sürüm."
+important = ""
+
+[pt-pt]
+name = "MyApp Docker"
+auth = "Your Name"
+descript = "Uma aplicação Docker TOS 7 criada com o modelo Docker. Fornece uma interface web através de contentor Docker."
+release_note = "1. Versão inicial."
+important = ""
