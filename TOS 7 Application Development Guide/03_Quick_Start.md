@@ -34,7 +34,7 @@ Based on your application type, use the corresponding GitHub template repository
 |---|---|---|
 | [Deb App Template (Single Package)](https://github.com/terra-master/app-template-deb) | Single-package mode | New applications built from scratch; all files packaged together |
 | [Deb App Template (Dual Package)](https://github.com/terra-master/app-template-deb-dual) | Dual-package mode | Applications that already have a universal standard deb package |
-| [Docker App Template](https://github.com/terra-master/app-template-docker) | Docker | Docker containerized deployment |
+| [Docker App Template](https://github.com/TerraMasterOfficial/app-pkg-tools/tree/main/TOS%207-template-docker) | Docker | Docker containerized deployment |
 
 > ⚠️ **Note:** Subtype (WebUI Internal/External/Headless) and packaging method (single/dual package) are two independent dimensions and can be cross-combined. Both single and dual packages support all three subtypes.
 
