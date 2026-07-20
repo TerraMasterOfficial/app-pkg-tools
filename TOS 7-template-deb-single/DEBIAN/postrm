@@ -1,0 +1,24 @@
+#!/bin/bash
+# Post-removal script — runs after the package is removed
+set -e
+
+APPID="myapp"
+
+systemctl daemon-reload
+
+if [ "$1" = "purge" ]; then
+    # Remove user
+    if id -u "${APPID}" > /dev/null 2>&1; then
+        userdel "${APPID}" 2>/dev/null || true
+    fi
+
+    # Clean up persistent data and app directory
+    rm -rf "/var/lib/${APPID}" 2>/dev/null || true
+    rm -rf "/var/log/${APPID}" 2>/dev/null || true
+    rm -rf "/usr/local/${APPID}" 2>/dev/null || true
+    rm -f "/var/api/${APPID}.sock" 2>/dev/null || true
+    rm -f "/etc/systemd/system/${APPID}.service" 2>/dev/null || true
+    systemctl daemon-reload 2>/dev/null || true
+fi
+
+exit 0

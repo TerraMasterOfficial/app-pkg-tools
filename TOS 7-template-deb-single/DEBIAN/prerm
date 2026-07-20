@@ -1,0 +1,15 @@
+#!/bin/bash
+# Pre-removal script — runs before the package is removed
+set -e
+
+APPID="myapp"
+
+# Kill remaining user processes
+pkill -u "${APPID}" 2>/dev/null || true
+sleep 1
+
+# Stop and disable service
+systemctl stop "${APPID}.service" 2>/dev/null || true
+systemctl disable "${APPID}.service" 2>/dev/null || true
+
+exit 0

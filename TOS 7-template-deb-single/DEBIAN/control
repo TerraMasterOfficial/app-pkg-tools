@@ -1,0 +1,9 @@
+Package: myapp
+Version: 1.0.0
+Architecture: amd64
+Section: utils
+Priority: optional
+Maintainer: Your Name <your.email@example.com>
+Depends: libc6 (>= 2.34), systemd
+Description: My Application
+ A brief description of what this application does.
