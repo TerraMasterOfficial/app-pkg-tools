@@ -1,0 +1,97 @@
+[en-us]
+name = "MyApp"
+auth = "Your Name"
+descript = "A TOS 7 application using Deb dual-package mode."
+release_note = "1. Initial release."
+important = "This application uses dual-package mode. Please ensure myapp-source is installed first."
+
+[zh-cn]
+name = "我的应用"
+auth = "你的名字"
+descript = "使用 Deb 双包模式的 TOS 7 应用。"
+release_note = "1. 首次发布。"
+important = "本应用使用双包模式，请确保已安装 myapp-source。"
+
+[zh-hk]
+name = "我的應用"
+auth = "你的名字"
+descript = "使用 Deb 雙包模式的 TOS 7 應用。"
+release_note = "1. 首次發佈。"
+important = ""
+
+[fr-fr]
+name = "MyApp"
+auth = "Your Name"
+descript = "Une application TOS 7 utilisant le mode double paquet Deb."
+release_note = "1. Version initiale."
+important = ""
+
+[de-de]
+name = "MyApp"
+auth = "Your Name"
+descript = "Eine TOS 7-Anwendung im Deb-Dual-Package-Modus."
+release_note = "1. Erstveröffentlichung."
+important = ""
+
+[it-it]
+name = "MyApp"
+auth = "Your Name"
+descript = "Un'applicazione TOS 7 in modalità doppio pacchetto Deb."
+release_note = "1. Versione iniziale."
+important = ""
+
+[es-es]
+name = "MyApp"
+auth = "Your Name"
+descript = "Una aplicación TOS 7 en modo paquete doble Deb."
+release_note = "1. Versión inicial."
+important = ""
+
+[hu-hu]
+name = "MyApp"
+auth = "Your Name"
+descript = "TOS 7 alkalmazás Deb kettős csomag módban."
+release_note = "1. Első kiadás."
+important = ""
+
+[ja-jp]
+name = "MyApp"
+auth = "Your Name"
+descript = "Deb デュアルパッケージモードを使用した TOS 7 アプリケーション。"
+release_note = "1. 初回リリース。"
+important = ""
+
+[ko-kr]
+name = "MyApp"
+auth = "Your Name"
+descript = "Deb 듀얼 패키지 모드를 사용하는 TOS 7 애플리케이션."
+release_note = "1. 최초 릴리스."
+important = ""
+
+[pl-pl]
+name = "MyApp"
+auth = "Your Name"
+descript = "Aplikacja TOS 7 w trybie podwójnego pakietu Deb."
+release_note = "1. Pierwsze wydanie."
+important = ""
+
+[ru-ru]
+name = "MyApp"
+auth = "Your Name"
+descript = "Приложение TOS 7 в режиме двойного пакета Deb."
+release_note = "1. Первый выпуск."
+important = ""
+
+[tr-tr]
+name = "MyApp"
+auth = "Your Name"
+descript = "Deb çift paket modunu kullanan bir TOS 7 uygulaması."
+release_note = "1. İlk sürüm."
+important = ""
+
+[pt-pt]
+name = "MyApp"
+auth = "Your Name"
+descript = "Uma aplicação TOS 7 no modo de pacote duplo Deb."
+release_note = "1. Versão inicial."
+important = ""

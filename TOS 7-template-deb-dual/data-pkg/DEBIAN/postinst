@@ -1,0 +1,17 @@
+#!/bin/bash
+# Post-installation script for data package
+set -e
+
+APPID="myapp"
+
+# Ensure correct permissions
+chmod 644 "/usr/local/${APPID}/config.ini" 2>/dev/null || true
+chmod 644 "/usr/local/${APPID}/${APPID}.lang" 2>/dev/null || true
+chmod 644 "/usr/local/${APPID}/images/icons/${APPID}.svg" 2>/dev/null || true
+
+# Enable and start service
+systemctl daemon-reload
+systemctl enable "${APPID}.service" 2>/dev/null || true
+systemctl start "${APPID}.service" 2>/dev/null || true
+
+exit 0

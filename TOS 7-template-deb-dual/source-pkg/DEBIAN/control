@@ -1,0 +1,9 @@
+Package: myapp-source
+Version: 1.0.0
+Architecture: amd64
+Section: utils
+Priority: optional
+Maintainer: Upstream Maintainer <upstream@example.com>
+Depends: libc6 (>= 2.34), systemd
+Description: My Application - Binary Package
+ This is the core application binary package.

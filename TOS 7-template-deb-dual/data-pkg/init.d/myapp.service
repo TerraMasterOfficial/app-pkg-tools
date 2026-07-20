@@ -1,0 +1,21 @@
+[Unit]
+Description=My Application Service
+After=network.target
+StartLimitBurst=5
+StartLimitIntervalSec=60
+
+[Service]
+Type=simple
+User=myapp
+Group=myapp
+WorkingDirectory=/usr/local/myapp
+ExecStart=/usr/local/myapp/bin/myapp
+
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/myapp /var/log/myapp
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
