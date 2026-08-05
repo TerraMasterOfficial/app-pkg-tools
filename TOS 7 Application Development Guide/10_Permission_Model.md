@@ -1,6 +1,6 @@
 # 10. Permission Model
 
-### 10.0 SPC (System Permission Control) Overview
+### 10.1 SPC (System Permission Control) Overview
 
 TOS7 introduces the **SPC (System Permission Control)** system, which follows the principle of least privilege and governs application system access behavior:
 
@@ -8,7 +8,7 @@ TOS7 introduces the **SPC (System Permission Control)** system, which follows th
 - Developers must clearly specify application permission requirements in the permission declaration. Applications can only obtain corresponding access permissions after platform approval.
 - Any behavior that bypasses SPC permission checks is prohibited; such applications will fail review or be delisted.
 
-### 10.1 Overview
+### 10.2 Overview
 
 TOS7 follows the **Principle of Least Privilege**. Applications can only request the minimum permissions necessary for operation. TOS7 applications interact with the **SPC (System Permission Control)** system. Applications must:
 - Declare permission requirements in the permission declaration (Section 10.7)
@@ -17,7 +17,7 @@ TOS7 follows the **Principle of Least Privilege**. Applications can only request
 
 The platform provides a structured permission model for both Deb and Docker applications.
 
-### 10.2 User and Group Model
+### 10.3 User and Group Model
 
 **⚠️ Root permissions for application users are strictly prohibited.** All applications must run as a dedicated non-root user.
 
@@ -41,7 +41,7 @@ useradd --system --no-create-home --shell /usr/sbin/nologin <appid>
 |---|---|---|
 | Non-root | `UID:GID` (e.g., `1000:1000`) | **Must be used.** Specified via the `user` field in compose. |
 
-### 10.3 File System Permissions
+### 10.4 File System Permissions
 
 **Standard Directory Permissions for Deb Applications:**
 
@@ -56,7 +56,7 @@ useradd --system --no-create-home --shell /usr/sbin/nologin <appid>
 
 > **Rule:** Application binaries and configuration should be read-only for the service user. Only data and log directories should be writable.
 
-### 10.4 Network Permissions
+### 10.5 Network Permissions
 
 | Permission | Deb Applications | Docker Applications | Description |
 |---|---|---|---|
@@ -64,7 +64,7 @@ useradd --system --no-create-home --shell /usr/sbin/nologin <appid>
 | Access Local Services | Allowed by default | Use `network_mode: host` or explicit linking | Minimize network exposure |
 | Outbound Connections | Allowed | Allowed | Outbound is unrestricted |
 
-### 10.5 Shared Folder Access
+### 10.6 Shared Folder Access
 
 TNAS shared folders are the primary data access mechanism. Applications requiring access to user data must:
 
@@ -88,7 +88,7 @@ Volumes:
 > **Important:** Applications must not directly modify shared folder permissions. Use the TOS shared folder management API or let users manually configure access permissions.
 
 
-### 10.5.1 Permission Request Process
+### 10.6.1 Permission Request Process
 
 When an application requires access to shared folders:
 
@@ -109,7 +109,7 @@ When an application requires access to shared folders:
    - /Volume1/<shared_folder>:/media:ro  # Read-only access
    ```
 
-### 10.6 System Resource Limits
+### 10.7 System Resource Limits
 
 
 **Default Resource Quotas by Application Type:**
@@ -154,7 +154,7 @@ services:
           memory: 128M
 ```
 
-### 10.7 Permission Declaration
+### 10.8 Permission Declaration
 
 For transparency, applications should document their permission requirements in README.md:
 
@@ -170,7 +170,7 @@ For transparency, applications should document their permission requirements in 
 ```
 
 
-### 10.8 Permission Red Lines (Automatic Rejection)
+### 10.9 Permission Red Lines (Automatic Rejection)
 
 The following permission requests will result in **automatic rejection**:
 
