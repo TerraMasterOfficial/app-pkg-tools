@@ -25,25 +25,25 @@
 ## 📑 Full Table of Contents
 
 1. [Overview](/TOS%207%20Application%20Development%20Guide/01_Overview.md) |
-2. [Architecture Strategy](docs/02_Architecture_Strategy.md) |
-3. [Quick Start](docs/03_Quick_Start.md) |
-4. [Package Specification](docs/04_Package_Specification.md) |
-5. [ABI Compatibility](docs/05_ABI_Compatibility.md) |
-6. [Development Environment](docs/06_Development_Environment.md) |
-7. [Application Types](docs/07_Application_Types.md) |
-8. [Deb Development](docs/08_Deb_Development.md) |
-9. [Docker Development](docs/09_Docker_Development.md) |
-10. [Permission Model](docs/10_Permission_Model.md) |
-11. [Package Signing](docs/11_Package_Signing.md) |
-12. [Best Practices](docs/12_Best_Practices.md) |
-13. [Local Testing & Debugging](docs/13_Local_Testing.md) |
-14. [CI/CD Guide](docs/14_CICD_Guide.md) |
-15. [Publishing Process](docs/15_Publishing_Process.md) |
-16. [Review Standards](docs/16_Review_Standards.md) |
-17. [Operations & Delisting](docs/17_Operations_Delisting.md) |
-18. [Commercialization & Donations](docs/18_Commercialization_Donations.md) |
-19. [FAQ](docs/19_FAQ.md) |
-20. [Appendix](docs/20_Appendix.md) |
+2. [Architecture Strategy](/TOS%207%20Application%20Development%20Guide/02_Architecture_Strategy.md) |
+3. [Quick Start](/TOS%207%20Application%20Development%20Guide/03_Quick_Start.md) |
+4. [Package Specification](/TOS%207%20Application%20Development%20Guide/04_Package_Specification.md) |
+5. [ABI Compatibility](/TOS%207%20Application%20Development%20Guide/05_ABI_Compatibility.md) |
+6. [Development Environment](/TOS%207%20Application%20Development%20Guide/06_Development_Environment.md) |
+7. [Application Types](/TOS%207%20Application%20Development%20Guide/07_Application_Types.md) |
+8. [Deb Development](/TOS%207%20Application%20Development%20Guide/08_Deb_Development.md) |
+9. [Docker Development](/TOS%207%20Application%20Development%20Guide/09_Docker_Development.md) |
+10. [Permission Model](/TOS%207%20Application%20Development%20Guide/10_Permission_Model.md) |
+11. [Package Signing](/TOS%207%20Application%20Development%20Guide/11_Package_Signing.md) |
+12. [Best Practices](/TOS%207%20Application%20Development%20Guide/12_Best_Practices.md) |
+13. [Local Testing & Debugging](/TOS%207%20Application%20Development%20Guide/13_Local_Testing.md) |
+14. [CI/CD Guide](/TOS%207%20Application%20Development%20Guide/14_CICD_Guide.md) |
+15. [Publishing Process](/TOS%207%20Application%20Development%20Guide/15_Publishing_Process.md) |
+16. [Review Standards](/TOS%207%20Application%20Development%20Guide/16_Review_Standards.md) |
+17. [Operations & Delisting](/TOS%207%20Application%20Development%20Guide/17_Operations_Delisting.md) |
+18. [Commercialization & Donations](/TOS%207%20Application%20Development%20Guide/18_Commercialization_Donations.md) |
+19. [FAQ](/TOS%207%20Application%20Development%20Guide/19_FAQ.md) |
+20. [Appendix](/TOS%207%20Application%20Development%20Guide/20_Appendix.md) |
 
 ---
 
@@ -79,9 +79,9 @@ docs/
 ## 🔗 Related Resources
 
 - [TNAS Developer Platform](https://developer.terra-master.com) (Coming soon)
-- [Deb App Template (Single Package)](https://github.com/terra-master/app-template-deb)
-- [Deb App Template (Dual Package)](https://github.com/terra-master/app-template-deb-dual)
-- [Docker App Template](https://github.com/terra-master/app-template-docker)
+- [Deb App Template (Single Package)](https://github.com/TerraMasterOfficial/app-pkg-tools/tree/main/TOS%207-template-deb-single)
+- [Deb App Template (Dual Package)](https://github.com/TerraMasterOfficial/app-pkg-tools/tree/main/TOS%207-template-deb-dual)
+- [Docker App Template](https://github.com/TerraMasterOfficial/app-pkg-tools/tree/main/TOS%207-template-docker)
 - [TOS App Center](https://terra-master.com)
 
 ---
