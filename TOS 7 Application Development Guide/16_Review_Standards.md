@@ -1,6 +1,6 @@
 # 16. Review Standards
 
-### 16.0 Submission Automated Validation (Pre-filter)
+### 16.1 Submission Automated Validation (Pre-filter)
 
 **Trigger Timing:** Executed in real time after a new version is submitted on the Developer Platform with the package uploaded / repository linked. Validation failure results in immediate blocking; no review ticket is generated and no initial review is entered.
 
@@ -64,7 +64,7 @@
 
 **Result Notification:** Automated validation failure only shows a popup with error description and documentation link; no review ticket is generated. Developers fix and resubmit, which re-triggers automated validation. Only after all checks pass can the process proceed to the 16.2 Manual Review workflow.
 
-### 16.1 Four Review Dimensions
+### 16.2 Four Review Dimensions
 
 | Dimension | Review Content | Reviewer |
 |---|---|---|
@@ -143,9 +143,9 @@
 - **Privacy Compliance:** No unauthorized collection of user data; no unauthorized data upload
 - See 15.2 Repository Requirements
 
-### 16.2 Review Workflow
+### 16.3 Review Workflow
 
-#### 16.2.1 Initial Review Phase
+#### 16.3.1 Initial Review Phase
 1. Dedicated review staff log into the Application Management Platform (https://mgmt.terra-master.com) and claim "Pending Initial Review" tasks
 2. Download the application package under review, obtain the baseline SHA-256 hash, and record it
 3. Verify information consistency: the application information submitted by the developer matches the content of the GitHub/Gitee repository
@@ -156,10 +156,10 @@
 - ✅ Passed → Application status updated to "Pending Manual Review", enters the manual review phase
 - ❌ Rejected → Detailed rejection reasons provided; developer notified through both channels for correction
 
-#### 16.2.2 Hash Value Flow Verification
+#### 16.3.2 Hash Value Flow Verification
 All review staff must first verify that the hash value matches the baseline hash value before beginning their review work. If the hash value is abnormal, immediately pause and investigate.
 
-#### 16.2.3 Manual Review Phase
+#### 16.3.3 Manual Review Phase
 Proceed in the following order:
 1. **Technical Support Staff** → Security Review (security scanning, code security, network security, data compliance)
 2. **Testing Support Staff** → Functionality & Compatibility Review (install/start/stop/uninstall testing, architecture adaptation, functional completeness)
@@ -167,7 +167,7 @@ Proceed in the following order:
 
 Each position provides a clear review opinion (approve/reject with specific reasons). The Dedicated Review Staff consolidates the results into a comprehensive review outcome.
 
-### 16.3 Scoring Standards
+### 16.4 Scoring Standards
 
 | Dimension | Weight | Max Score | Minimum Passing Score | One-Vote Veto Conditions |
 |---|---|---|---|---|
@@ -233,7 +233,7 @@ Each position provides a clear review opinion (approve/reject with specific reas
 - config.ini uses single quotes or contains inline comments
 - Submitted package architecture does not match the `platform` field in config.ini
 
-### 16.4 Common Rejection Reasons (Sorted by Frequency)
+### 16.5 Common Rejection Reasons (Sorted by Frequency)
 
 | Rank | Rejection Reason | Correction Suggestion | Applicable Scope | Reference |
 |---|---|---|---|---|
@@ -258,7 +258,7 @@ Each position provides a clear review opinion (approve/reject with specific reas
 | 19 | app.lang has empty name/descript (in some language) | name and descript for all languages must be filled; untranslated languages use English as filler | All apps | 8.5.3 Field Descriptions |
 | 20 | config.ini uses single quotes or contains inline comments | JSON only allows double-quoted strings; remove all `//` or `/* */` comments | All apps | 8.4 config.ini Specification |
 
-### 16.5 Rejection Correction Process
+### 16.6 Rejection Correction Process
 
 1. Review not passed → System notifies developer through dual channels: "Platform Message + Registered Email"
 2. Developer logs into the Developer Platform to view rejection reasons and correction suggestions
@@ -278,7 +278,7 @@ Under any of the following circumstances, the platform will **permanently close*
 
 Permanent restriction is an irreversible penalty. The platform will send a formal notification via email with supporting evidence. Developers may submit an appeal application through the platform's appeal channel within 15 business days.
 
-### 16.6 Review Timelines
+### 16.7 Review Timelines
 
 | Phase | Estimated Duration | Description |
 |---|---|---|
