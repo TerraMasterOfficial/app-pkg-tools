@@ -13,7 +13,8 @@
 
 | Scenario | Recommended Reading |
 |------|---------|
-| First time with TOS app development | [📘 Chapter 3 · Quick Start](docs/03_Quick_Start.md) — Get started in 5 minutes |
+| First time with TOS app development | [📘 Chapter 3 · Quick Start](https://github.com/TerraMasterOfficial/app-pkg-tools/blob/main/TOS%207%20Application%20Development%20Guide/03_Quick_Start.md
+) — Get started in 5 minutes |
 | Understanding the overall architecture | [📘 Chapter 2 · Architecture Strategy](docs/02_Architecture_Strategy.md) — Container-first strategy |
 | Developing Deb applications | [📘 Chapter 8 · Deb Development](docs/08_Deb_Development.md) — Complete specification |
 | Developing Docker applications | [📘 Chapter 9 · Docker Development](docs/09_Docker_Development.md) — Docker Compose guide |
