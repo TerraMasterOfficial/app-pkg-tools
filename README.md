@@ -14,18 +14,17 @@
 | Scenario | Recommended Reading |
 |------|---------|
 | First time with TOS app development | [📘 Chapter 3 · Quick Start](/TOS%207%20Application%20Development%20Guide/03_Quick_Start.md) — Get started in 5 minutes |
-| Understanding the overall architecture | [📘 Chapter 2 · Architecture Strategy]([docs/02_Architecture_Strategy.md](https://github.com/TerraMasterOfficial/app-pkg-tools/blob/main/TOS%207%20Application%20Development%20Guide/02_Architecture_Strategy.md) — Container-first strategy |
-| Developing Deb applications | [📘 Chapter 8 · Deb Development](https://github.com/TerraMasterOfficial/app-pkg-tools/blob/main/TOS%207%20Application%20Development%20Guide/08_Deb_Development.md) — Complete specification |
-| Developing Docker applications | [📘 Chapter 9 · Docker Development](https://github.com/TerraMasterOfficial/app-pkg-tools/blob/main/TOS%207%20Application%20Development%20Guide/09_Docker_Development.md) — Docker Compose guide |
-| Preparing for publishing | [📘 Chapter 15 · Publishing Process](https://github.com/TerraMasterOfficial/app-pkg-tools/blob/main/TOS%207%20Application%20Development%20Guide/15_Publishing_Process.md) — Submit for review |
-| Troubleshooting | [📘 Chapter 19 · FAQ](https://github.com/TerraMasterOfficial/app-pkg-tools/blob/main/TOS%207%20Application%20Development%20Guide/19_FAQ.md
-) — Frequently asked questions |
+| Understanding the overall architecture | [📘 Chapter 2 · Architecture Strategy](/TOS%207%20Application%20Development%20Guide/02_Architecture_Strategy.md) — Container-first strategy |
+| Developing Deb applications | [📘 Chapter 8 · Deb Development](/TOS%207%20Application%20Development%20Guide/08_Deb_Development.md) — Complete specification |
+| Developing Docker applications | [📘 Chapter 9 · Docker Development](/TOS%207%20Application%20Development%20Guide/09_Docker_Development.md) — Docker Compose guide |
+| Preparing for publishing | [📘 Chapter 15 · Publishing Process](/TOS%207%20Application%20Development%20Guide/15_Publishing_Process.md) — Submit for review |
+| Troubleshooting | [📘 Chapter 19 · FAQ](/TOS%207%20Application%20Development%20Guide/19_FAQ.md) — Frequently asked questions |
 
 ---
 
 ## 📑 Full Table of Contents
 
-1. [Overview](docs/01_Overview.md) |
+1. [Overview](/TOS%207%20Application%20Development%20Guide/01_Overview.md) |
 2. [Architecture Strategy](docs/02_Architecture_Strategy.md) |
 3. [Quick Start](docs/03_Quick_Start.md) |
 4. [Package Specification](docs/04_Package_Specification.md) |
