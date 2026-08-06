@@ -1,6 +1,6 @@
 # 1. Overview
 
-TOS 7 employs a root file system that is compatible with Ubuntu 22.04. Starting from TOS 7, the platform supports the following two types for newly submitted applications:
+TOS 7 employs a root filesystem compatible with Ubuntu 22.04. Starting from TOS 7, the platform supports the following two types for newly submitted applications:
 
 - **Deb Applications**: Native applications running directly on the host, packaged in standard Debian package format
 - **Docker Applications**: Containerized applications deployed via Docker Compose
