@@ -207,17 +207,5 @@ services:
 - Docker's restart policy (`unless-stopped`) will attempt to restart unhealthy containers
 - If the container enters a restart loop, the platform will flag the application as needing developer attention
 
-**Data Backup, Migration, and Reset:**
-
-| Operation | Path | Method |
-|---|---|---|
-| Backup config | `/Volume*/DockerAppData/<appid>/config/` | tar or rsync backup |
-| Backup data | `/Volume*/DockerAppData/<appid>/data/` | tar or rsync backup |
-| Migration | All `/Volume*/DockerAppData/<appid>/` | Copy to new device, same path |
-| Reset to defaults | Stop container → Delete `/Volume*/DockerAppData/<appid>/config/` → Restart | Container creates fresh config |
-| Completely delete data | Stop container → Delete `/Volume*/DockerAppData/<appid>/` | All data permanently removed |
-
-> **Note:** `*` in `/Volume*/` represents the volume number (e.g., Volume1, Volume2) chosen by the user during installation. Config and data are stored separately, enabling independent backup/restore. Always back up before major upgrades.
-
 
 ← [Previous: Deb Development](08_Deb_Development.md) &nbsp;&nbsp;|&nbsp;&nbsp; [Next: Permission Model](10_Permission_Model.md) → &nbsp;&nbsp;|&nbsp;&nbsp; [📖 Back to Contents](../README.md)
