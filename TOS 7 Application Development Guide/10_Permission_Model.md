@@ -111,21 +111,29 @@ When an application requires access to shared folders:
 
 ### 10.7 System Resource Limits
 
+**Application Installation Path**
+
+Third-party applications are completely installed on **storage volumes** (data disks) at `/Volumex/@apps/<appid>/`, **not on the system disk (/)**.
+
+- `x` represents the volume number (e.g., Volume1, Volume2, etc.) chosen by the user during installation.
+- **All application files** — including binaries, configuration files, logs, scripts, and web UI files — are stored under `/Volumex/@apps/<appid>/`.
+- Only a lightweight **registration/entry record** (used by TOS to recognize installed applications) resides on the system disk. This record occupies negligible space and does not pose any capacity concern.
+- Only system-built-in applications reside on the system disk (`/usr/local/system_app_data/`).
+
+> ✅ **For third-party developers:** Since your entire application (including program files, configs, and logs) is installed on the data disk, **system disk capacity is not a concern for your app**. All business data should also be stored on data disks (`/Volumex/`), which have no capacity limits.
 
 **Default Resource Quotas by Application Type:**
 
-> Note: The following disk limits only apply to the **application's runtime footprint on the system disk (/)** . Application business data must be stored on `/Volume*` (data disks). Data disks have no storage capacity limit and can support TB-level data storage.
+| Application Type | CPU Limit | Memory Limit | Examples |
+|---|---|---|---|
+| Media Server | 200% (2 cores) | 2048M | Jellyfin, Plex, Emby |
+| Download Manager | 100% (1 core) | 512M | Aria2, qBittorrent |
+| Utilities | 50% | 256M | File Manager, Text Editor |
+| Web Service | 100% (1 core) | 512M | CMS, Blog, Wiki |
+| Database | 200% (2 cores) | 2048M | MySQL, PostgreSQL, Redis |
+| Security | 50% | 256M | Firewall, Antivirus |
 
-| Application Type | CPU Limit | Memory Limit | System Disk (/) Limit | Examples |
-|---|---|---|---|---|
-| Media Server | 200% (2 cores) | 2048M | 50GB | Jellyfin, Plex, Emby |
-| Download Manager | 100% (1 core) | 512M | 20GB | Aria2, qBittorrent |
-| Utilities | 50% | 256M | 10GB | File Manager, Text Editor |
-| Web Service | 100% (1 core) | 512M | 30GB | CMS, Blog, Wiki |
-| Database | 200% (2 cores) | 2048M | 30GB | MySQL, PostgreSQL, Redis |
-| Security | 50% | 256M | 10GB | Firewall, Antivirus |
-
-The above are platform defaults. Developers may request higher system disk limits in the permission declaration with reasonable justification; business data must always be stored on data disks and is not affected by these limits.
+The above are platform defaults. Developers may request higher limits in the permission declaration with reasonable justification.
 
 **Deb Applications (via systemd):**
 ```ini
