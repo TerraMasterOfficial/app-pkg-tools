@@ -16,7 +16,7 @@ Follow a consistent directory layout to ensure maintainability and compatibility
 ├── webui.bz2         # Front-end page archive (WebUI applications)
 ├── nginx/            # Nginx configuration (externally opened applications)
 ├── init.d/           # Systemd service files
-├── data/             # Runtime data (writable)
+├── data/             # Runtime data (caches, temporary files, writable)
 └── logs/             # Application logs
 ```
 
