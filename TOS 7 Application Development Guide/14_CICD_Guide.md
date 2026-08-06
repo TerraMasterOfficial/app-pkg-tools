@@ -1,4 +1,4 @@
-# 14. CICD Guide
+# 14. CI/CD Guide
 
 ### 14.1 GitHub Actions Templates
 
