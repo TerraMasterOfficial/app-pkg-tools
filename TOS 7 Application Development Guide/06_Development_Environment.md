@@ -11,7 +11,7 @@ TOS 7 employs a root filesystem compatible with **Ubuntu 22.04 LTS (Jammy Jellyf
 |--------|-------------|----------|
 | Ubuntu 22.04 Physical Machine / VM (arm64) | Native ARM64 environment; compile and run directly, no cross-compilation needed | Developers with ARM hardware or willing to use ARM VMs |
 | Docker Container (`arm64v8/ubuntu:22.04`) | Run ARM64 container on x86 host via QEMU emulation | x86 developers who prefer containerized workflows |
-| x86 Host + Cross-Compilation | Install cross-compilation toolchains on x86 dev machine, cross-compile then deploy to **TOS 7** | Most common setup for x86 developers |
+| x86 Host + Cross-Compilation | Install cross-compilation toolchains on x86 dev machine, cross-compile to **produce binaries targeting the TNAS platform** | Most common setup for x86 developers |
 
 > **Key Principle:** Regardless of the chosen approach, the APT sources and package versions used in the development environment must align with TOS 7's root filesystem (Ubuntu 22.04 compatible) to avoid runtime errors caused by glibc, OpenSSL, and other core library version mismatches.
 
