@@ -23,35 +23,52 @@ Follow a consistent directory layout to ensure maintainability and compatibility
 > **Note:** `*` in `/Volume*/` represents the volume number (e.g., Volume1, Volume2) chosen by the user during installation.
 
 **Data Storage Recommendations:**
-- Store persistent application data in `/Volume*/@apps/<appid>/data/`
-- Store logs in `/Volume*/@apps/<appid>/logs/`
-- Store user business data (media, documents, etc.) in shared folders under `/Volume*/`
+- **Runtime data** (`/Volume*/@apps/<appid>/data/`) — Application-generated caches, temporary files, and runtime state. This data can be safely regenerated.
+- **Logs** (`/Volume*/@apps/<appid>/logs/`) — Application log files. Ensure log rotation is configured.
+- **User business data** — Must be stored in shared folders under `/Volume*/` (e.g., `/Volume*/<appid>/`) for user access via SMB/NFS.
 
 ### 12.2 Data Persistence
 
+**Understanding Data Types:**
+
+| Data Type | Path | Description |
+|---|---|---|
+| **Runtime Data** | `/Volume*/@apps/<appid>/data/` | Caches, temporary files, runtime state (can be regenerated) |
+| **User Data** | `/Volume*/<appid>/` (shared folder) | Persistent business data (must survive app upgrades) |
+
 **Deb Applications:**
-1. Persistent data is recommended to be stored under `/Volume*/@apps/<appid>/data/` or a dedicated shared folder under `/Volume*/`
-2. For NAS-accessible data, create a shared folder:
+
+1. **Runtime data** is stored in `/Volume*/@apps/<appid>/data/`
+2. **User data** must be stored in a shared folder created by the application:
    ```bash
-   ter_share_add -name <appid>-data -owner <appid>
+   # In postinst — create a shared folder for user data
+   ter_share_add -name <appid> -owner <appid>
    ```
-3. If needed, create symbolic links to maintain compatibility:
+3. To maintain compatibility, the application can create symbolic links:
    ```bash
-   ln -s /Volume*/<appid>-data /Volume*/@apps/<appid>/data
+   ln -s /Volume*/<appid> /Volume*/@apps/<appid>/data
    ```
-4. Runtime data is stored in `/Volume*/@apps/<appid>/data/`
+4. The shared folder `/Volume*/<appid>/` is accessible to users via SMB/NFS
 
 **Docker Applications:**
-1. Mount all persistent data directories via volumes:
+
+1. Mount configuration and runtime data to `/Volume*/DockerAppData/<appid>/`:
    ```yaml
    Volumes:
      - /Volume*/DockerAppData/<appid>/config:/config
-     - /Volume*/DockerAppData/<appid>/data:/data
+     - /Volume*/DockerAppData/<appid>/cache:/cache
    ```
-2. Storing data in the container filesystem is prohibited
-3. Use separate volumes for configuration and data to support independent backups
+2. User data must be stored in a shared folder:
+   ```yaml
+   Volumes:
+     - /Volume*/<appid>:/data
+   ```
+3. Storing data in the container filesystem is prohibited
+4. Use separate volumes for configuration and data to support independent backups
 
 > **Note:** `*` in `/Volume*/` represents the volume number (e.g., Volume1, Volume2) chosen by the user during installation.
+> - Runtime data can be safely deleted without losing user business data
+> - User data (shared folder) must be backed up before app upgrades
 
 ### 12.3 Logging
 
