@@ -1,8 +1,8 @@
 # 10. Permission Model
 
-### 10.1 SPC (System Permission Control) Overview
+### 10.1 SPC Overview
 
-TOS7 introduces the **SPC (System Permission Control)** system, which follows the principle of least privilege and governs application system access behavior:
+TOS 7 introduces the **SPC (System Permission Control)** system, which follows the principle of least privilege and governs application system access behavior:
 
 - Applications cannot directly modify system files or obtain root privileges; all permission requests must be submitted through platform APIs
 - Developers must clearly specify application permission requirements in the permission declaration. Applications can only obtain corresponding access permissions after platform approval.
@@ -164,18 +164,16 @@ services:
 
 ### 10.8 Permission Declaration
 
+> 📝 **Note:** The following table is an **example** showing how to document your application's permission requirements. Replace the values (port numbers, file paths, usernames) with those actually used by your application.
+
 For transparency, applications should document their permission requirements in README.md:
-
-```markdown
-
 
 | Permission | Justification |
 |---|---|
-| Network: Port 8686 | Web UI access |
-| File System: /var/lib/tmrtimer | Runtime data storage |
-| User: tmrtimer (system user) | Isolated service execution |
+| Network: Port `<your-port>` | Web UI access |
+| File System: `<your-data-path>` | Runtime data storage |
+| User: `<your-appid>` (system user) | Isolated service execution |
 | Shared Folder: None | No user data access required |
-```
 
 
 ### 10.9 Permission Red Lines (Automatic Rejection)
