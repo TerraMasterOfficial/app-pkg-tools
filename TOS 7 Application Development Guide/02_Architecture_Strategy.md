@@ -61,7 +61,7 @@ The TOS 7 application ecosystem is evolving toward a **Container-first** model:
 
 ### 2.3 TOS System Pre-installed Dependencies
 
-TOS 7.0 is built on Ubuntu 22.04. The system comes pre-installed with the following core dependencies:
+TOS 7 employs a root file system that is compatible with Ubuntu 22.04. The system comes pre-installed with the following core dependencies:
 
 - bash / dash
 - Python 3.10
