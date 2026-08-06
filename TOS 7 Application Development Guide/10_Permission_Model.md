@@ -1,3 +1,4 @@
+
 # 10. Permission Model
 
 ### 10.1 SPC Overview
@@ -27,11 +28,12 @@ The platform provides a structured permission model for both Deb and Docker appl
 |---|---|---|---|
 | Dedicated User | `<appid>` | Must be used. Created by preinst script. Minimal permissions. | **Mandatory** |
 
-> **Mandatory Requirement:** All Deb applications must create a dedicated user (`<appid>`) and run the application as that user. Running as root is strictly prohibited. The dedicated user must be created in the `preinst` script to ensure minimal permissions at runtime. Application data directories (such as `/usr/local/<appid>`) must be owned by the dedicated user to avoid permission errors or unauthorized access.
+> **Mandatory Requirement:** All Deb applications must create a dedicated user (`<appid>`) and run the application as that user. Running as root is strictly prohibited. The dedicated user must be created in the `preinst` script to ensure minimal permissions at runtime. Application data directories (such as `/Volume*/@apps/<appid>/`) must be owned by the dedicated user to avoid permission errors or unauthorized access.
 
 **Creating a Dedicated User:**
 ```bash
 # In preinst
+# The system will automatically assign a unique UID to the new user.
 useradd --system --no-create-home --shell /usr/sbin/nologin <appid>
 ```
 
@@ -47,12 +49,14 @@ useradd --system --no-create-home --shell /usr/sbin/nologin <appid>
 
 | Path | Owner | Permissions | Description |
 |---|---|---|---|
-| `/usr/local/<appid>/` | `<appid>:<appid>` | `755` | Application directory (service read-only) |
-| `/usr/local/<appid>/bin/` | `<appid>:<appid>` | `755` | Executables |
-| `/usr/local/<appid>/config/` | `<appid>:<appid>` | `750` | Configuration files |
-| `/usr/local/<appid>/site/` | `<appid>:<appid>` | `755` | Web UI files |
-| `/var/lib/<appid>/` | `<appid>:<appid>` | `750` | Runtime data (read-write) |
-| `/var/log/<appid>/` | `<appid>:<appid>` | `750` | Application logs |
+| `/Volume*/@apps/<appid>/` | `<appid>:<appid>` | `755` | Application directory (service read-only) |
+| `/Volume*/@apps/<appid>/bin/` | `<appid>:<appid>` | `755` | Executables |
+| `/Volume*/@apps/<appid>/config/` | `<appid>:<appid>` | `750` | Configuration files (read-only for service) |
+| `/Volume*/@apps/<appid>/site/` | `<appid>:<appid>` | `755` | Web UI files |
+| `/Volume*/@apps/<appid>/data/` | `<appid>:<appid>` | `750` | Runtime data (read-write) |
+| `/Volume*/@apps/<appid>/logs/` | `<appid>:<appid>` | `750` | Application logs (read-write) |
+
+> **Note:** `*` in `/Volume*/` represents the volume number (e.g., Volume1, Volume2) chosen by the user during installation.
 
 > **Rule:** Application binaries and configuration should be read-only for the service user. Only data and log directories should be writable.
 
@@ -81,8 +85,8 @@ usermod -aG allusers <appid>
 3. **Docker applications** mount shared folders via volumes:
 ```yaml
 Volumes:
-  - /Volume1/<shared_folder>:/data:rw    # Read-write access
-  - /Volume1/<shared_folder>:/media:ro   # Read-only access
+  - /Volume*/<shared_folder>:/data:rw    # Read-write access
+  - /Volume*/<shared_folder>:/media:ro   # Read-only access
 ```
 
 > **Important:** Applications must not directly modify shared folder permissions. Use the TOS shared folder management API or let users manually configure access permissions.
@@ -105,22 +109,22 @@ When an application requires access to shared folders:
 3. **Permission Format**:
    ```yaml
    # Docker volumes
-   - /Volume1/<shared_folder>:/data:rw   # Read-write access
-   - /Volume1/<shared_folder>:/media:ro  # Read-only access
+   - /Volume*/<shared_folder>:/data:rw   # Read-write access
+   - /Volume*/<shared_folder>:/media:ro  # Read-only access
    ```
 
 ### 10.7 System Resource Limits
 
 **Application Installation Path**
 
-Third-party applications are completely installed on **storage volumes** (data disks) at `/Volumex/@apps/<appid>/`, **not on the system disk (/)**.
+Third-party applications are completely installed on **storage volumes** (data disks) at `/Volume*/@apps/<appid>/`, **not on the system disk (/)**.
 
-- `x` represents the volume number (e.g., Volume1, Volume2, etc.) chosen by the user during installation.
-- **All application files** — including binaries, configuration files, logs, scripts, and web UI files — are stored under `/Volumex/@apps/<appid>/`.
+- `*` represents the volume number (e.g., Volume1, Volume2, etc.) chosen by the user during installation.
+- **All application files** — including binaries, configuration files, logs, scripts, and web UI files — are stored under `/Volume*/@apps/<appid>/`.
 - Only a lightweight **registration/entry record** (used by TOS to recognize installed applications) resides on the system disk. This record occupies negligible space and does not pose any capacity concern.
 - Only system-built-in applications reside on the system disk (`/usr/local/system_app_data/`).
 
-> ✅ **For third-party developers:** Since your entire application (including program files, configs, and logs) is installed on the data disk, **system disk capacity is not a concern for your app**. All business data should also be stored on data disks (`/Volumex/`), which have no capacity limits.
+> ✅ **For third-party developers:** Since your entire application (including program files, configs, and logs) is installed on the data disk, **system disk capacity is not a concern for your app**. All business data should also be stored on data disks (`/Volume*/`), which have no capacity limits.
 
 **Default Resource Quotas by Application Type:**
 
@@ -189,6 +193,7 @@ The following permission requests will result in **automatic rejection**:
 | Unrestricted Network Access | Requesting `network_mode: host` without written reasonable justification (only available to system-level network tools) |
 | Excessive Port Exposure | Requesting more ports than functionally required |
 
----
 
 ← [Previous: Docker Development](09_Docker_Development.md) &nbsp;&nbsp;|&nbsp;&nbsp; [Next: Package Signing](11_Package_Signing.md) → &nbsp;&nbsp;|&nbsp;&nbsp; [📖 Back to Contents](../README.md)
+
+
