@@ -1,5 +1,7 @@
+
 # 20. Appendix
 
+### Appendix A: Application Categories
 
 | Category ID | Display Name |
 |---|---|
@@ -12,6 +14,7 @@
 | `Security` | Security |
 | `Download` | Download |
 | `Driver` | Driver |
+| `Artificial_Intelligence` | AI |
 
 **Applying for a New Category:**
 If no existing category fits your app, you can apply for a new category:
@@ -39,18 +42,21 @@ The following ports are reserved by the TOS system and must not be used by appli
 
 Recommended app port range: **8000–19999** (excluding ports already occupied by installed apps). If ports in the recommended range are occupied, you may use **49152–65535** (dynamic port range), but it must be explicitly declared in the configuration.
 
-
 ### Appendix C: TOS System Directories
 
 | Path | Description |
 |---|---|
-| `/usr/local/<appid>/` | App main directory (Deb apps) |
-| `/Volume1/@apps/<appid>/` | TOS app installation directory |
-| `/var/lib/<appid>/` | App runtime data |
-| `/var/log/<appid>/` | App logs |
-| `/etc/init.d/<appid>` | TOS service script symlink |
+| `/Volume*/@apps/<appid>/` | App installation directory (non-embedded apps) |
+| `/Volume*/@apps/<appid>/data/` | App runtime data (caches, temporary files) |
+| `/Volume*/@apps/<appid>/logs/` | App logs |
+| `/Volume*/DockerAppData/<appid>/` | Docker app data (config and business data) |
+| `/usr/local/system_app_data/<appid>/` | System embedded app directory (for built-in apps only) |
 | `/etc/systemd/system/<appid>.service` | Systemd service file |
-| `/Volume1/docker/<appid>/` | Docker app data |
+
+> **Note:** `*` in `/Volume*/` represents the volume number (e.g., Volume1, Volume2) chosen by the user during installation.
+> - For non-embedded apps (both official and third-party), all files are stored under `/Volume*/@apps/<appid>/`.
+> - System embedded apps (e.g., GlobalSearch, StorageManager) reside on the system disk at `/usr/local/system_app_data/`.
+> - Docker app data is stored separately under `/Volume*/DockerAppData/<appid>/` via volume mounts.
 
 ### Appendix D: TOS Systemd Targets
 
@@ -63,10 +69,10 @@ Recommended app port range: **8000–19999** (excluding ports already occupied b
 
 | TOS Version | Base System | glibc | Python3 | Docker | Node.js |
 |---|---|---|---|---|---|
-| TOS 7.0 | Ubuntu 22.04 | 2.35 | 3.10 | 20.10+ | 18.x |
-| TOS 7.x (subsequent minor versions, compatible with TOS 7.0) | Ubuntu 22.04 | 2.35 | 3.10 | 24.x (from TOS 7.2) | 20.x |
+| TOS 7.0 | Ubuntu 22.04-compatible | 2.35 | 3.10 | 20.10+ | 18.x |
+| TOS 7.x | Ubuntu 22.04-compatible | 2.35 | 3.10 | 20.10+ (or higher) | 18.x (or higher) |
 
-> Note: The TOS 7.x series minor versions (including 7.1 and above) will be based on Ubuntu 22.04 and maintain ABI/API compatibility for core dependencies. Apps developed for TOS 7.0 will run without additional adaptation.
+> Note: TOS 7.x series minor versions will maintain compatibility with TOS 7.0. Apps developed for TOS 7.0 will run without additional adaptation. For the latest version-specific details, refer to the official TOS release notes or the Developer Platform.
 
 ### Appendix F: Language File Quick Template
 
@@ -194,11 +200,7 @@ Use this checklist when upgrading your app to a new major version:
 - [ ] Rollback path tested: downgrade or restore from backup
 - [ ] SHA-256 checksums regenerated
 
----
-
-
-
-### Appendix J: README.md Template
+### Appendix I: README.md Template
 
 ```markdown
 # <App Name>
@@ -213,7 +215,7 @@ A brief description of the app and its purpose.
 
 ## Installation
 1. Requirements: TOS 7.0+, [other dependencies]
-2. Install from TNAS App Center
+2. Install from TOS App Center
 3. Initial configuration steps
 
 ## Usage
@@ -251,9 +253,9 @@ Key configuration options and their defaults.
 [License type]
 ```
 
-### Appendix K: Complete Config File Templates
+### Appendix J: Complete Config File Templates
 
-Complete downloadable config file templates for all app types are available on the TNAS Developer Platform:
+Complete downloadable config file templates for all app types are available on the TOS Developer Platform:
 - `config.ini` template (Deb WebUI Internal, Deb WebUI External, Deb No UI, Docker)
 - `app.lang` template (14-language quick template; see Appendix F)
 - Systemd unit file template (with security hardening)
@@ -263,7 +265,7 @@ Complete downloadable config file templates for all app types are available on t
 - docker-compose.yml template
 - GitHub Actions CI/CD template
 
-### Appendix L: Common Rejection Reasons & Fix Examples
+### Appendix K: Common Rejection Reasons & Fix Examples
 
 | Rejection Reason | Incorrect Example | Correct Fix |
 |---|---|---|
@@ -277,7 +279,7 @@ Complete downloadable config file templates for all app types are available on t
 | Missing checksum | No .sha256 file submitted | Run `sha256sum <file> > <file>.sha256` |
 | Version not incremented | v1.0.0 → v1.0.0 (same version) | Increment version: v1.0.0 → v1.0.1 |
 
-### Appendix M: Terminology & Definitions
+### Appendix L: Terminology & Definitions
 
 | Term | Definition | AKA |
 |---|---|---|
@@ -293,8 +295,7 @@ Complete downloadable config file templates for all app types are available on t
 | **No UI Service** | An app without a graphical interface; a background daemon service | Headless service, daemon |
 | **Minimum TOS Version** | The minimum TOS version required by the app; set in the `low_version` field of `config.ini`. | Min TOS version, TOS version requirement |
 
-
-### Appendix N: Beta App Management
+### Appendix M: Beta App Management
 
 | Rule | Description |
 |---|---|
@@ -304,8 +305,6 @@ Complete downloadable config file templates for all app types are available on t
 | **Prohibited Behavior** | Beta apps must not be distributed as production releases; misleading users about beta status will result in rejection |
 | **Expiry & Delisting** | Beta apps not updated for 90 days may be automatically delisted |
 | **Version Number** | Use standard SemVer with the `"beta": true` field; do not use `-beta`, `-rc`, or other version string suffixes |
-
----
 
 
 *This document is the official global specification for TOS7 app development and publishing. The specification will be continuously updated with TOS7 version iterations. Developers should refer to the latest version on the Developer Platform.*
