@@ -1,17 +1,18 @@
+
 # 13. Local Testing & Debugging
 
-Before submitting your application, you must thoroughly test the complete lifecycle on a TNAS device.
+Before submitting your application, you must thoroughly test the complete lifecycle on a **TNAS device**.
 
 **TOS7 Development Environment Quick Setup:**
 
 1. **Option A: Ubuntu 22.04 Virtual Machine (Recommended)**
    - Download VirtualBox or VMware
-   - Import the official TOS7 developer VM from the TNAS Developer Platform
-   - The VM includes pre-configured TOS7 tools and simulated services
+   - Import the official **TOS7 developer VM** from the TOS Developer Platform
+   - The VM includes pre-configured **TOS7 tools** and simulated services
 
 2. **Option B: Docker-Based Development Container**
    ```bash
-   docker run -it --name tos7-dev      -v $(pwd):/workspace      ubuntu:22.04 /bin/bash
+   docker run -it --name tos7-dev -v $(pwd):/workspace ubuntu:22.04 /bin/bash
    apt-get update && apt-get install -y dpkg-dev lintian systemd
    ```
 
@@ -49,21 +50,29 @@ sudo dpkg --purge <appid>        # Complete removal
 
 # 8. Verify cleanup (no residual files/services)
 systemctl list-unit-files | grep <appid>
-ls /usr/local/<appid> 2>/dev/null
-ls /var/lib/<appid> 2>/dev/null
+# Check runtime data directory
+ls /Volume*/@apps/<appid> 2>/dev/null
+# Check persistent data (shared folder)
+ls /Volume*/<appid> 2>/dev/null
+# Check system user
 id <appid> 2>/dev/null
 
 # 9. Test upgrade path
 sudo dpkg -i <appid>_0.9.0_amd64.deb   # Install old version
-# ... Add some data ...
+# ... Add some data to /Volume*/<appid>/ ...
 sudo dpkg -i <appid>_1.0.0_amd64.deb   # Upgrade to new version
 # Verify data is preserved and migrated
 ```
+
+> **Note:** `*` in `/Volume*/` represents the volume number (e.g., Volume1, Volume2) chosen by the user during installation.
+> - `/Volume*/@apps/<appid>/` — Application runtime data (logs, cache, temporary files)
+> - `/Volume*/<appid>/` — Persistent user data (shared folder, created by the application)
 
 ### 13.2 Docker Application Testing
 
 ```bash
 # 1. Ensure DockerEngine is installed and running
+# Docker Engine is available in the TOS App Center — users will be prompted to install it if not already present.
 sudo systemctl status docker
 
 # 2. Start the application
@@ -88,7 +97,7 @@ docker-compose -f docker-compose.yml up -d
 # 8. Test data persistence
 docker-compose -f docker-compose.yml down
 docker-compose -f docker-compose.yml up -d
-# Verify data still exists
+# Verify data still exists in /Volume*/DockerAppData/<appid>/ and /Volume*/<appid>/
 
 # 9. Test health check
 docker inspect --format='{{.State.Health.Status}}' <appid>
@@ -115,24 +124,27 @@ echo "--- Service Status ---"
 systemctl status "$APPID" 2>/dev/null || echo "Service not found"
 
 echo "--- Processes ---"
-pgrep -a -f "/usr/local/$APPID/" 2>/dev/null || echo "No related processes found"
+pgrep -a -f "/Volume*/@apps/$APPID/" 2>/dev/null || echo "No related processes found"
 
 echo "--- Ports ---"
 ss -tlnp | grep "$APPID"
 
-echo "--- File Ownership ---"
-ls -laR "/usr/local/$APPID/" 2>/dev/null
+echo "--- Runtime Data Directory ---"
+ls -laR "/Volume*/@apps/$APPID/" 2>/dev/null
+
+echo "--- Persistent Data (Shared Folder) ---"
+ls -laR "/Volume*/$APPID/" 2>/dev/null
 
 echo "--- Recent Errors ---"
 journalctl -u "$APPID" -p err --since "10 minutes ago" --no-pager
 
 echo "--- Disk Usage ---"
-du -sh "/usr/local/$APPID/" "/var/lib/$APPID/" "/var/log/$APPID/" 2>/dev/null
+du -sh "/Volume*/@apps/$APPID/" "/Volume*/$APPID/" 2>/dev/null
 
 echo "=== Debug Complete ==="
 ```
 
-#### Service Debugging
+**Service Debugging**
 
 ```bash
 # Verify service file validity
@@ -147,9 +159,11 @@ ss -tlnp | grep <port>
 # Check process details
 ps aux | grep <appid>
 
-# Check file ownership
-ls -laR /usr/local/<appid>/
-ls -laR /var/lib/<appid>/
+# Check runtime data directory
+ls -laR /Volume*/@apps/<appid>/
+
+# Check persistent data (shared folder)
+ls -laR /Volume*/<appid>/
 
 # View systemd error logs
 journalctl -u <appid> -p err
@@ -158,7 +172,7 @@ journalctl -u <appid> -p err
 grep <appid> /var/log/syslog
 ```
 
-#### Docker Debugging
+**Docker Debugging**
 
 ```bash
 # Enter a running container
@@ -181,7 +195,7 @@ docker diff <appid>
 docker history <image>
 ```
 
-#### Rapid Development Cycle
+**Rapid Development Cycle**
 
 Rapid iteration during development:
 
