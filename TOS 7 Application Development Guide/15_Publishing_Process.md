@@ -4,7 +4,7 @@
 
 #### Step 1: Register a Developer Account
 
-1. Visit the TNAS Developer Platform: https://developer.terra-master.com
+1. Visit the TOS Developer Platform: https://developer.terra-master.com
 2. Click the [Register] button to enter the registration information page
 3. Use a valid email address as your login account and fill in your developer name (it is recommended to keep it consistent with the `publisher` field in the configuration file)
 4. Read and agree to the terms of service, then click [Confirm] to complete registration
@@ -14,7 +14,7 @@
 
 #### Step 2: Obtain Configuration Templates and Develop Your Application
 
-1. Refer to the standard templates in Chapter 8 (Deb Application Development & Configuration Specification) of this document to write config.ini, app.lang, systemd service files, and other configurations, or use the recommended project template repository on the TNAS Developer Platform for quick initialization
+1. Refer to the standard templates in Chapter 8 (Deb Application Development & Configuration Specification) of this document to write config.ini, app.lang, systemd service files, and other configurations, or use the recommended project template repository on the TOS Developer Platform for quick initialization
 2. Complete application development and packaging according to this document's specifications
 3. Perform local testing and verification (see Chapter 13)
 
@@ -84,7 +84,7 @@ Review status descriptions:
 
 #### Step 9: Official Publication
 
-After passing the review, the application will be listed on the TNAS App Center within 1-2 business days:
+After passing the review, the application will be listed on the TOS App Center within 1-2 business days:
 - Users can search for and install the application in the App Center
 - Developers can check the application status change to "Published" under [My Applications]
 
