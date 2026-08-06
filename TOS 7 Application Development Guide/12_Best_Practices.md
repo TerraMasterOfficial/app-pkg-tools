@@ -1,65 +1,57 @@
+
 # 12. Best Practices
 
 ### 12.1 Application Directory Layout
 
-Follow a consistent directory layout to ensure maintainability and compatibility:
+Follow a consistent directory layout to ensure maintainability and compatibility. All non-embedded applications (both official and third-party) are installed on **storage volumes** at `/Volume*/@apps/<appid>/`.
+
+**Standard Directory Layout:**
 
 ```
-/usr/local/<appid>/
-├── <binary>        # Application executable
-├── config.ini      # Application configuration file
-├── <appid>.lang    # Language file
-├── images/         # Icon resources
-├── webui.bz2       # Front-end page archive (WebUI applications)
-├── nginx/          # Nginx configuration (externally opened applications)
-└── init.d/         # Systemd service files
-
-/var/lib/<appid>/   # Runtime data (writable)
-/var/log/<appid>/   # Application logs
-/var/api/           # Unix Socket directory (WebUI internally opened)
+/Volume*/@apps/<appid>/
+├── <binary>          # Application executable
+├── config.ini        # Application configuration file
+├── <appid>.lang      # Language file
+├── images/           # Icon resources
+├── webui.bz2         # Front-end page archive (WebUI applications)
+├── nginx/            # Nginx configuration (externally opened applications)
+├── init.d/           # Systemd service files
+├── data/             # Runtime data (writable)
+└── logs/             # Application logs
 ```
 
-The directory structure differs slightly between official and third-party applications as shown below:
-
-**Directory Differences: Official vs Third-Party Applications:**
-
-| Directory | Official Applications | Third-Party Applications |
-|---|---|---|
-| Install Base Path | `/usr/local/<appid>/` | `/usr/local/<appid>/` |
-| Data Storage | `/home/<appid>/` or `/Volume*/` | `/var/lib/<appid>/` or `/Volume*/` |
-| Log Storage | Managed by TOS | `/var/log/<appid>/` |
-| Systemd Unit Path | `/etc/systemd/system/<appid>.service` | `/etc/systemd/system/<system_id>.service` |
-
-> **Note:** Official applications enjoy system-preset `/home/<appid>/` dedicated space; third-party applications are recommended to use `/var/lib/<appid>/` or `/Volume*/` for data storage.
+> **Note:** `*` in `/Volume*/` represents the volume number (e.g., Volume1, Volume2) chosen by the user during installation.
 
 **Data Storage Recommendations:**
-- **It is recommended to store data within `/usr/local/<app_id>`, or within `/Volume*`**
-- Runtime mutable data is recommended to use `/var/lib/<appid>/`
-- Log output should use `/var/log/<appid>/`
+- Store persistent application data in `/Volume*/@apps/<appid>/data/`
+- Store logs in `/Volume*/@apps/<appid>/logs/`
+- Store user business data (media, documents, etc.) in shared folders under `/Volume*/`
 
 ### 12.2 Data Persistence
 
 **Deb Applications:**
-1. Persistent data is recommended to be stored under `/usr/local/<appid>` or `/Volume*`
+1. Persistent data is recommended to be stored under `/Volume*/@apps/<appid>/data/` or a dedicated shared folder under `/Volume*/`
 2. For NAS-accessible data, create a shared folder:
    ```bash
    ter_share_add -name <appid>-data -owner <appid>
    ```
-3. Create symbolic links if needed:
+3. If needed, create symbolic links to maintain compatibility:
    ```bash
-   ln -s /Volume1/<appid>-data /usr/local/<appid>/data
+   ln -s /Volume*/<appid>-data /Volume*/@apps/<appid>/data
    ```
-4. Runtime data is stored in `/var/lib/<appid>/`
+4. Runtime data is stored in `/Volume*/@apps/<appid>/data/`
 
 **Docker Applications:**
 1. Mount all persistent data directories via volumes:
    ```yaml
    Volumes:
-     - /Volume1/docker/<appid>/config:/config
-     - /Volume1/docker/<appid>/data:/data
+     - /Volume*/DockerAppData/<appid>/config:/config
+     - /Volume*/DockerAppData/<appid>/data:/data
    ```
 2. Storing data in the container filesystem is prohibited
 3. Use separate volumes for configuration and data to support independent backups
+
+> **Note:** `*` in `/Volume*/` represents the volume number (e.g., Volume1, Volume2) chosen by the user during installation.
 
 ### 12.3 Logging
 
@@ -70,7 +62,7 @@ The directory structure differs slightly between official and third-party applic
 # View logs: journalctl -u <appid>
 
 # Or write to file
-exec >> /var/log/<appid>/app.log 2>&1
+exec >> /Volume*/@apps/<appid>/logs/app.log 2>&1
 ```
 
 **Docker Applications:**
@@ -92,7 +84,6 @@ services:
 - Rotate logs to prevent disk exhaustion
 - Never log sensitive information (passwords, tokens, personal data)
 
-
 **Log Retention and Cleanup:**
 
 | Log Type | Maximum Retention | Cleanup Method |
@@ -103,7 +94,7 @@ services:
 
 **Logrotate Configuration:**
 ```
-/var/log/<appid>/*.log {
+/Volume*/@apps/<appid>/logs/*.log {
     daily
     rotate 30
     compress
@@ -161,13 +152,13 @@ services:
    ```bash
    if [ -n "$2" ]; then
        # Upgrading from $2 — run migration
-       /usr/local/<appid>/bin/migrate --from "$2"
+       /Volume*/@apps/<appid>/bin/migrate --from "$2"
    fi
    ```
 2. Never delete user data during upgrades
 3. Back up before modifying configuration formats
 4. Migration logic should be reversible to support rollback
-5. **Users are advised to store data within `/usr/local/<app_id>` or within `/Volume*`** to ensure data is not lost after upgrades
+5. **Users are advised to store data within `/Volume*/@apps/<appid>/data/` or within `/Volume*/`** to ensure data is not lost after upgrades
 
 **Docker Applications:**
 1. Use an entrypoint script to detect and migrate old data formats:
@@ -195,7 +186,7 @@ NoNewPrivileges=true
 # File system protection
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/var/lib/<appid> /var/log/<appid>
+ReadWritePaths=/Volume*/@apps/<appid>/data /Volume*/@apps/<appid>/logs
 
 > **Note:** If the application needs to write configuration files under `/etc`, it must use `ReadWritePaths` to explicitly declare writable paths.
 
@@ -221,7 +212,6 @@ services:
       - /tmp
       - /run
 ```
-
 
 > **Required (all submissions must include):**
 > - `NoNewPrivileges=true`
@@ -250,7 +240,7 @@ services:
 4. Document port usage in README.md
 
 **Port Range Description:**
-- **8000-19999**: The recommended port range for TNAS applications, avoiding system core service ports (such as 22/80/443/8181), with ample capacity to meet the port needs of the vast majority of applications
+- **8000-19999**: The recommended port range for TOS 7 applications, avoiding system core service ports (such as 22/80/443/8181), with ample capacity to meet the port needs of the vast majority of applications
 - **49152-65535**: IANA-defined dynamic/private port range, suitable for temporary or backup scenarios
 
 **Common Port Reference (Avoid Using):**
@@ -271,6 +261,5 @@ services:
 | 9000 | Portainer |
 | 9090 | Prometheus |
 
----
 
 ← [Previous: Package Signing](11_Package_Signing.md) &nbsp;&nbsp;|&nbsp;&nbsp; [Next: Local Testing & Debugging](13_Local_Testing.md) → &nbsp;&nbsp;|&nbsp;&nbsp; [📖 Back to Contents](../README.md)
