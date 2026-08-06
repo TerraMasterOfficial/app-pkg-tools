@@ -4,11 +4,11 @@
 
 #### 18.1.1 Feature Overview
 
-To support developers in continuously maintaining and developing quality applications, the TNAS Developer Platform provides the ability to configure a donation link. Developers can add a donation link in their profile, and the app detail page for all published apps will automatically display a donation button. Users who click it will be redirected directly to that link and can voluntarily provide financial support to the developer.
+To support developers in continuously maintaining and developing quality applications, the TOS Developer Platform provides the ability to configure a donation link. Developers can add a donation link in their profile, and the app detail page for all published apps will automatically display a donation button. Users who click it will be redirected directly to that link and can voluntarily provide financial support to the developer.
 
 #### 18.1.2 Donation Link Configuration Rules
 
-**Configuration Entry:** Log in to the TNAS Developer Platform → Go to the "Profile" page → Locate the "Donation Link" module and click the "Edit" button on the right to make changes.
+**Configuration Entry:** Log in to the TOS Developer Platform → Go to the "Profile" page → Locate the "Donation Link" module and click the "Edit" button on the right to make changes.
 
 **Format Requirements:**
 
@@ -32,7 +32,7 @@ To support developers in continuously maintaining and developing quality applica
 
 #### 18.2.1 Feature Vision
 
-To help developers earn reasonable returns for their development efforts, the TNAS app ecosystem will introduce a paid app commercialization program in the future, providing compliant and transparent paid distribution channels for quality apps. This will allow developers' innovation and investment to yield corresponding returns while offering users more high-quality professional app choices.
+To help developers earn reasonable returns for their development efforts, the TOS app ecosystem will introduce a paid app commercialization program in the future, providing compliant and transparent paid distribution channels for quality apps. This will allow developers' innovation and investment to yield corresponding returns while offering users more high-quality professional app choices.
 
 #### 18.2.2 Core Program Framework (Planned Direction)
 
