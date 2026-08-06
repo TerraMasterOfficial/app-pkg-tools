@@ -59,7 +59,7 @@ curl http://localhost:<port>/health
 1. Push your code to a public GitHub repository (including all source code, build scripts, and the final .deb or .tar.gz package)
 2. Create an application entry on the developer platform and link your GitHub repository
 3. Submit the application for review; the platform will automatically pull the package from your repository and run automated validation, followed by manual review
-4. After approval, the application will be published to the [TOS App Center](https://app.tos.org)
+4. After approval, the application will be published to the TOS App Center.
 
 > 📝 **Note:** The developer platform automatically retrieves the application package from your GitHub repository. No manual upload is required.
 
