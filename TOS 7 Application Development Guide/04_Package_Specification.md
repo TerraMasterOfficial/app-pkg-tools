@@ -1,3 +1,4 @@
+
 # 4. Package Specification
 
 This section defines the formal specifications for TOS 7 application packages. All applications must comply with this specification.
@@ -24,7 +25,7 @@ TOS 7 applications follow a clearly defined lifecycle:
 | Stage | Trigger | Script/Operation | Expected Behavior |
 |---|---|---|---|
 | Before Install | `dpkg -i` | `DEBIAN/preinst` | Create user, check prerequisites, create directories |
-| Install | `dpkg -i` | Package extraction | Files deployed to `/usr/local/<appid>/` etc. |
+| Install | `dpkg -i` | Package extraction | Files deployed according to the packaging specification (see Chapter 8); actual installation path on TOS 7 is `/Volume*/@apps/<appid>/` |
 | After Install | `dpkg -i` | `DEBIAN/postinst` | Set permissions, enable service, start service |
 | Start | `systemctl start` | systemd / init.d | Application process starts |
 | Stop | `systemctl stop` | systemd / init.d | Application process gracefully stops |
@@ -42,7 +43,7 @@ TOS 7 applications follow a clearly defined lifecycle:
 | Upgrade | App Center (user clicks "Update" button when a new version is available) | Pull new image, rebuild container | Zero-downtime or brief downtime | It is recommended that applications support smooth upgrades to avoid data interruption |
 | Uninstall | App Center (user clicks "Uninstall" button) | Remove container, optionally clean up volumes | All resources released | Users can choose whether to retain data volumes to avoid accidental data deletion |
 
-> Note: "App Center" refers to the built-in application management interface of the TNAS system. Install/start/stop/upgrade/uninstall operations performed by users through this interface will trigger the corresponding lifecycle processes.
+> Note: "App Center" refers to the built-in application management interface of the TOS system. Install/start/stop/upgrade/uninstall operations performed by users through this interface will trigger the corresponding lifecycle processes.
 
 
 ### 4.2 Version Number Specification
@@ -83,7 +84,8 @@ PATCH: Backward-compatible bug fixes
 - `postinst` receives `$1 = "configure"` parameter, with `$2` being the old version number
 - Use `$2` to detect the old version and perform data migration
 - Never delete user data during the upgrade process; only modify configuration formats or migrate data structures
-- Users store data in the `/usr/local/<app_id>` directory, which is the application's dedicated data directory. The platform will not delete or overwrite user data in this directory during application upgrades or reinstallation
+- Users store persistent business data in the `/Volume*/<appid>/` shared folder, which is created by the application via `ter_share_add`. The platform will not delete or overwrite user data in this shared folder during application upgrades or reinstallation
+- Runtime data (caches, temporary files) is stored in `/Volume*/@apps/<appid>/data/` and can be safely regenerated
 - It is recommended not to store data in system common directories such as `/etc`, `/var`, `/usr/bin`, as these directories may be overwritten by system updates or application upgrades, leading to data loss
 
 ```bash
@@ -115,8 +117,8 @@ esac
 
 | TOS Version | Base System | glibc | Python3 | Docker | Node.js |
 |---|---|---|---|---|---|
-| TOS 7.0 | Compatible with Ubuntu 22.04 | 2.35 | 3.10 | 20.10+ | 18.x |
-| TOS 7.x (subsequent minor versions, compatible with TOS 7.0) | Compatible with Ubuntu 22.04 | 2.35 | 3.10 | 20.10+ (TOS 7.0); 24.x (since TOS 7.2) | 20.x |
+| TOS 7.0 | Ubuntu 22.04-compatible | 2.35 | 3.10 | 20.10+ | 18.x |
+| TOS 7.x (subsequent minor versions, compatible with TOS 7.0) | Ubuntu 22.04-compatible | 2.35 | 3.10 | 20.10+ (TOS 7.0); 24.x (since TOS 7.2) | 20.x |
 
 > **Note:** Node.js versions are for reference within Docker containers only. Deb applications must not directly depend on them.
 
@@ -144,9 +146,6 @@ TOS employs a root filesystem compatible with Ubuntu Linux, and the filesystem i
 
 **Prohibited:** Using case variants of the same file or directory within a single application package. This causes "file not found" and "service start failure" errors on Linux.
 
----
-
----
 
 ### 4.6 Cross-Platform Line Ending Specification (CRLF to LF)
 
