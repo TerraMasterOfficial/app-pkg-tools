@@ -1,8 +1,11 @@
+
 # 9. Docker Development
 
 ### 9.1 Overview
 
-Docker applications run in containers managed by the TOS7 built-in Docker engine. They are defined via a `docker-compose.yml` file and require the DockerEngine application to be installed on the TNAS device.
+Docker applications run in containers managed by the TOS 7 Docker Engine.
+
+> **Prerequisite:** Docker Engine is not pre-installed in TOS 7. It is provided as an application in the TOS App Center and must be installed and enabled by the user. When users install a Docker-based application, the platform automatically checks for Docker Engine and prompts installation if it is missing or disabled — no additional action is required from the developer.
 
 **Core Requirements:**
 - Must provide a `docker-compose.yml` compatible with Compose Spec 3.8+
@@ -34,8 +37,8 @@ services:
     container_name: <appid>
     restart: unless-stopped
     Volumes:
-      - /Volume1/docker/<appid>/config:/config
-      - /Volume1/docker/<appid>/data:/data
+      - /Volume*/DockerAppData/<appid>/config:/config
+      - /Volume*/DockerAppData/<appid>/data:/data
     ports:
       - "<host_port>:<container_port>"
     environment:
@@ -47,6 +50,8 @@ x-app-meta:
     port: <host_port>
     protocol: http
 ```
+
+> **Note:** `*` in `/Volume*/` represents the volume number (e.g., Volume1, Volume2) chosen by the user during installation.
 
 **Rules:**
 
@@ -153,8 +158,8 @@ services:
     container_name: myapp-docker
     restart: unless-stopped
     Volumes:
-      - /Volume1/docker/myapp-docker/config:/config
-      - /Volume1/docker/myapp-docker/data:/data
+      - /Volume*/DockerAppData/myapp-docker/config:/config
+      - /Volume*/DockerAppData/myapp-docker/data:/data
     ports:
       - "8080:8080"
     environment:
@@ -168,8 +173,7 @@ x-app-meta:
     protocol: http
 ```
 
-
-> **Note:** This application opens its WebUI externally, so `path` uses the `http://${ip}:<port>` format.
+> **Note:** `*` in `/Volume*/` represents the volume number (e.g., Volume1, Volume2) chosen by the user during installation. This application opens its WebUI externally, so `path` uses the `http://${ip}:<port>` format.
 
 **Multi-container Service Startup Order:**
 For applications with multiple services (e.g., Web + Database):
@@ -207,14 +211,13 @@ services:
 
 | Operation | Path | Method |
 |---|---|---|
-| Backup config | `/Volume1/docker/<appid>/config` | tar or rsync backup |
-| Backup data | `/Volume1/docker/<appid>/data` | tar or rsync backup |
-| Migration | All `/Volume1/docker/<appid>/` | Copy to new device, same path |
-| Reset to defaults | Stop container → Delete `/Volume1/docker/<appid>/config` → Restart | Container creates fresh config |
-| Completely delete data | Stop container → Delete `/Volume1/docker/<appid>/` | All data permanently removed |
+| Backup config | `/Volume*/DockerAppData/<appid>/config/` | tar or rsync backup |
+| Backup data | `/Volume*/DockerAppData/<appid>/data/` | tar or rsync backup |
+| Migration | All `/Volume*/DockerAppData/<appid>/` | Copy to new device, same path |
+| Reset to defaults | Stop container → Delete `/Volume*/DockerAppData/<appid>/config/` → Restart | Container creates fresh config |
+| Completely delete data | Stop container → Delete `/Volume*/DockerAppData/<appid>/` | All data permanently removed |
 
-> Note: Config and data are stored separately, enabling independent backup/restore. Always back up before major upgrades.
+> **Note:** `*` in `/Volume*/` represents the volume number (e.g., Volume1, Volume2) chosen by the user during installation. Config and data are stored separately, enabling independent backup/restore. Always back up before major upgrades.
 
----
 
 ← [Previous: Deb Development](08_Deb_Development.md) &nbsp;&nbsp;|&nbsp;&nbsp; [Next: Permission Model](10_Permission_Model.md) → &nbsp;&nbsp;|&nbsp;&nbsp; [📖 Back to Contents](../README.md)
