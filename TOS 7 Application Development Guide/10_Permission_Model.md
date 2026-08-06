@@ -56,9 +56,13 @@ useradd --system --no-create-home --shell /usr/sbin/nologin <appid>
 | `/Volume*/@apps/<appid>/data/` | `<appid>:<appid>` | `750` | Runtime data (read-write) |
 | `/Volume*/@apps/<appid>/logs/` | `<appid>:<appid>` | `750` | Application logs (read-write) |
 
-> **Note:** `*` in `/Volume*/` represents the volume number (e.g., Volume1, Volume2) chosen by the user during installation.
+> **Note 1:** `*` in `/Volume*/` represents the volume number (e.g., Volume1, Volume2) chosen by the user during installation.
 
-> **Rule:** Application binaries and configuration should be read-only for the service user. Only data and log directories should be writable.
+> **Note 2:** Application binaries and configuration should be read-only for the service user. Only data and log directories should be writable.
+
+> **Note 3: Data Types**
+> - **Runtime data** (`/Volume*/@apps/<appid>/data/`) — Application-generated caches, temporary files, and runtime state. This data is managed by the application and can be safely regenerated.
+> - **User data** (shared folder created via `ter_share_add`) — Persistent business data (documents, photos, databases). This data must be stored in a shared folder under `/Volume*/` to allow user access via SMB/NFS.
 
 ### 10.5 Network Permissions
 
