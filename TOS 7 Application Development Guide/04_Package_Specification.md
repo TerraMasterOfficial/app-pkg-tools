@@ -118,17 +118,13 @@ esac
 | TOS Version | Base System | glibc | Python3 | Docker | Node.js |
 |---|---|---|---|---|---|
 | TOS 7.0 | Ubuntu 22.04-compatible | 2.35 | 3.10 | 20.10+ | 18.x |
-| TOS 7.x (subsequent minor versions, compatible with TOS 7.0) | Ubuntu 22.04-compatible | 2.35 | 3.10 | 20.10+ (TOS 7.0); 24.x (since TOS 7.2) | 20.x |
+| TOS 7.x | Ubuntu 22.04-compatible | 2.35 | 3.10 | 20.10+ (or higher) | 18.x (or higher) |
 
 > **Note:** Node.js versions are for reference within Docker containers only. Deb applications must not directly depend on them.
 
 > **Important:** Applications must declare the minimum TOS version requirement via the `low_version` field in config.ini. The platform will automatically filter out incompatible devices.
 
-> **TOS 7.x Minor Version Compatibility:** The TOS 7.x minor version series (including 7.1 and above) will maintain ABI/API compatibility for core dependencies (glibc/Python3/Docker/Node.js), compatible with the Ubuntu 22.04 root filesystem. Applications developed for TOS 7.0 will run without additional adaptation.
-
-**TOS 7 Minor Version Compatibility:**
-- The `low_version` field must specify the minimum required TOS version
-- When submitting updates, test on the latest TOS 7 minor version
+> **TOS 7.x Minor Version Compatibility:** The TOS 7.x minor version series (including 7.1 and above) will maintain ABI/API compatibility for core dependencies (glibc/Python3/Docker/Node.js), compatible with the Ubuntu 22.04-compatible root filesystem. Applications developed for TOS 7.0 will run without additional adaptation.
 
 
 ### 4.5 Case Sensitivity Specification
