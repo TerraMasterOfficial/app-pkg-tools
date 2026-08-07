@@ -77,6 +77,27 @@ PATCH: Backward-compatible bug fixes
 - Version rollback: The platform does not support rolling back to a "smaller" version number. If a rollback is needed, a rollback request must be submitted on the developer platform, and the platform will roll back the application to the previous stable version
 - See Appendix N - Beta Version Application Management for details
 
+### 4.2.1 Release Asset Naming Specification
+
+When uploading application packages to GitHub/Gitee Releases, the package file must follow the naming conventions below.
+
+**Important:** Version numbers are **not** included in package file names. The version is specified through the Release tag/version when creating the Release. The platform will read the version from the Release metadata and verify it against the `version` field in `config.ini`.
+
+| Application Type | Package Format | Naming Convention | Example |
+|---|---|---|---|
+| Deb (Single Package) | `.deb` file | `<app_id>_<platform>.deb` | `myapp_x86_64.deb` |
+| Deb (Dual Package) | `.tar.gz` archive | `<app_id>_<platform>.tar.gz` | `myapp_x86_64.tar.gz` |
+| Docker Application | `.tar.gz` archive | `<app_id>.tar.gz` | `myapp.tar.gz` |
+
+**Field Definitions:**
+- `<app_id>`: Must exactly match the `id` field in `config.ini`
+- `<platform>`: Must exactly match the `platform` field in `config.ini` (`x86_64` or `aarch64`)
+
+**Release Tag Requirement:**
+- The Release tag/version **must** exactly match the `version` field in `config.ini` (format: `xx.yy.zzz`)
+- Example: If `config.ini.version = "1.0.0"`, the Release tag must be `v1.0.0` or `1.0.0`
+- Mismatches between the Release version and `config.ini.version` will result in automated rejection
+
 ### 4.3 Upgrades
 
 **Deb Application Upgrades:**
