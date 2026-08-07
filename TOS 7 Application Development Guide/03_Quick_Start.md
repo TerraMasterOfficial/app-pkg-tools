@@ -7,10 +7,10 @@ This chapter helps developers complete their first TOS 7 application development
 
 - A TNAS device running TOS 7.0 (current stable/beta version) — **recommended but optional**
 
-  > 💡 **No TNAS hardware?** No problem. You can develop TOS applications without owning a physical TNAS device. As long as your development environment meets the recommended setup (see [Chapter 6 · Development Environment](06_Development_Environment.md#testing-environment-options)), you can build and test your application using alternatives such as Ubuntu 22.04 VM, Open TOS local deployment, or a remote testing device.
+  > 💡 **No TNAS hardware?** No problem. You can develop TOS applications without owning a physical TNAS device. As long as your development environment meets the recommended setup (see [Chapter 6 · Development Environment](06_Development_Environment.md#testing-environment-options)), you can build and test your application using alternatives such as Ubuntu 22.04 VM or a remote testing device.
 
 - Basic Linux command line skills
-- GitHub account (for code hosting and developer platform integration)
+- GitHub or Gitee account (for code hosting and developer platform integration)
 
 ## 3.2 Five-Step Publishing Process
 
@@ -56,12 +56,13 @@ curl http://localhost:<port>/health
 
 **Step 5: Submit for Review**
 
-1. Push your code to a public GitHub repository (including all source code, build scripts, and the final .deb or .tar.gz package)
-2. Create an application entry on the developer platform and link your GitHub repository
-3. Submit the application for review; the platform will automatically pull the package from your repository and run automated validation, followed by manual review
-4. After approval, the application will be published to the TOS App Center.
+1. Push your code to a public GitHub or Gitee repository
+2. Create a Release in your repository and upload the package file as a Release asset (see [Chapter 15 · Step 3](15_Publishing_Process.md#step-3-create-a-release-and-upload-package-assets) for detailed naming and format requirements)
+3. Create an application entry on the developer platform and link your GitHub/Gitee repository
+4. Submit the application for review; the platform will automatically pull the package from your Release and run automated validation, followed by manual review
+5. After approval, the application will be published to the TOS App Center
 
-> 📝 **Note:** The developer platform automatically retrieves the application package from your GitHub repository. No manual upload is required.
+> 📝 **Note:** The developer platform automatically retrieves the application package from your GitHub/Gitee Release. No manual upload is required. For detailed package format, naming, and Release requirements, see [Chapter 15 · Publishing Process](15_Publishing_Process.md).
 
 ## 3.3 Key Checklist
 
@@ -73,7 +74,9 @@ Before submitting to the review platform, verify the following items:
 - [ ] systemd service file `User` is not `root`
 - [ ] Version number is strictly incremented and consistent across `config.ini`, `DEBIAN/control`, and `app.lang`
 - [ ] Full install/start/stop/uninstall workflow tested on a real TNAS device or alternative testing environment (see [Chapter 6 · Development Environment](06_Development_Environment.md#testing-environment-options))
-> 💡 **No TNAS hardware?** No problem. You can develop and test TOS applications without owning a physical TNAS device. As long as your development environment meets the recommended setup (see [Chapter 6 · Development Environment](06_Development_Environment.md#testing-environment-options)), alternatives such as Ubuntu 22.04 VM, Open TOS local deployment, or a remote testing device work just as well.
+
+> 💡 **No TNAS hardware?** No problem. You can develop and test TOS applications without owning a physical TNAS device. As long as your development environment meets the recommended setup (see [Chapter 6 · Development Environment](06_Development_Environment.md#testing-environment-options)), alternatives such as Ubuntu 22.04 VM or a remote testing device work just as well.
+
 ## 3.4 Common Pitfalls to Avoid
 
 Before beginning formal development, pay special attention to the two most common cross-platform issues below to avoid rejection after submission:
@@ -102,6 +105,5 @@ For detailed specifications, see [Chapter 4 · Package Specification — Cross-P
 
 For more strategies, see [Chapter 2 · Architecture Strategy — Handling Non-Pre-installed Dependencies](02_Architecture_Strategy.md#handling-non-pre-installed-dependencies).
 
----
 
 ← [Previous Chapter: Architecture Strategy](02_Architecture_Strategy.md) &nbsp;&nbsp;|&nbsp;&nbsp; [Next Chapter: Package Specification](04_Package_Specification.md) → &nbsp;&nbsp;|&nbsp;&nbsp; [📖 Back to Table of Contents](../README.md)
