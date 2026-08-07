@@ -126,6 +126,9 @@ esac
 
 > **TOS 7.x Minor Version Compatibility:** The TOS 7.x minor version series (including 7.1 and above) will maintain ABI/API compatibility for core dependencies (glibc/Python3/Docker/Node.js), compatible with the Ubuntu 22.04-compatible root filesystem. Applications developed for TOS 7.0 will run without additional adaptation.
 
+**TOS 7 Minor Version Compatibility:**
+- The `low_version` field must specify the minimum required TOS version
+- When submitting updates, test on the latest TOS 7 minor version
 
 ### 4.5 Case Sensitivity Specification
 
