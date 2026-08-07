@@ -104,7 +104,7 @@ TOS 7 comes with **Python 3.10.12** pre-installed, along with the following syst
 | `python3-django-pyscss` | Django SCSS support |
 
 **Development Guidelines:**
-- Deb applications can directly depend on Python 3.10 by declaring `Depends: python3` in `DEBIan/control`
+- Deb applications can directly depend on Python 3.10 by declaring `Depends: python3` in `DEBIAN/control`
 - For additional third-party libraries not listed above, bundle them with the Deb package or install to a private directory using `pip install --target`
 - See [Chapter 2 · Architecture Strategy](02_Architecture_Strategy.md) for general guidance on handling non-pre-installed dependencies
 
@@ -209,10 +209,9 @@ A TNAS device running **TOS 7.0 (current stable/testing version)** is required f
 |---|--------|-------------|-----------------|
 | 1 | **Ubuntu 22.04 Virtual Machine** | Basic functional testing of Deb applications on an Ubuntu 22.04 VM | Early-stage development and CI/CD |
 | 2 | **Docker Desktop** (Windows/macOS/Linux) | Simulate the TOS 7.0 Docker environment for container app testing | Docker application development |
-| 3 | **Open TOS Local Deployment** | Open TOS is fully identical to the TOS 7.0 system. Install on a regular PC or VM via the [TerraMaster official website](https://www.terra-master.com) | Closest alternative to a physical device; final pre-submission testing |
-| 4 | **Remote Experience Machine** | Apply for an official TerraMaster TOS 7.0 remote experience machine via the official forum. Full testing without owning hardware | Developers who lack both hardware and local VM capacity |
+| 3 | **Remote Experience Machine** | Apply for an official TerraMaster TOS 7.0 remote experience machine via the official forum. Full testing without owning hardware | Developers who lack both hardware and local VM capacity |
 
-> **Recommendation:** Use options 1–2 for daily development and CI/CD. Use option 3 (Open TOS) or option 4 (Remote Machine) for comprehensive pre-submission verification.
+> **Recommendation:** Use options 1–2 for daily development and CI/CD. Use option 3 (Remote Machine) for comprehensive pre-submission verification.
 
 > For detailed testing procedures, see [Chapter 13 · Local Testing & Debugging](13_Local_Testing.md).
 
@@ -248,6 +247,3 @@ dmesg | tail -10
 ---
 
 ← [Previous: ABI Compatibility](05_ABI_Compatibility.md) &nbsp;&nbsp;|&nbsp;&nbsp; [Next: Application Types](07_Application_Types.md) → &nbsp;&nbsp;|&nbsp;&nbsp; [📖 Back to Contents](../README.md)
-
----
-
