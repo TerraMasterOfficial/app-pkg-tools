@@ -78,7 +78,7 @@ docs/
 
 ## 🔗 Related Resources
 
-- [TNAS Developer Platform](https://developer.terra-master.com) (Coming soon)
+- [TNAS Developer Platform](https://developer.terra-master.com) 
 - [Deb App Template (Single Package)](https://github.com/TerraMasterOfficial/app-pkg-tools/tree/main/TOS%207-template-deb-single)
 - [Deb App Template (Dual Package)](https://github.com/TerraMasterOfficial/app-pkg-tools/tree/main/TOS%207-template-deb-dual)
 - [Docker App Template](https://github.com/TerraMasterOfficial/app-pkg-tools/tree/main/TOS%207-template-docker)
