@@ -13,19 +13,35 @@ Docker applications run in containers managed by the TOS 7 Docker Engine.
 - **Privileged mode is strictly prohibited**
 - **System core ports (22, 80, 443, 8181, 5050) must not be occupied**
 
-### 9.2 Directory Structure
+
+### 9.2 Package Structure (`.tar.gz` Archive)
+
+The Docker application is submitted as a `.tar.gz` archive. The archive must contain exactly the following files at the root level:
 
 ```
-<appid>-docker/                # Repository root
-├── config.ini                 # Application metadata
-├── app.lang                   # Multilingual file (14 languages)
-├── docker-compose.yml         # [Required] Container orchestration config
-├── .env.example               # [Optional] Environment variable example
-├── README.md                  # Bilingual documentation
-└── images/
-    └── icons/
-        └── <appid>.svg        # Application icon
+<appid>.tar.gz
+├── config.ini
+├── <appid>.lang
+├── <appid>.svg
+└── docker-compose.yml
 ```
+
+**File descriptions:**
+
+| File | Required | Description |
+|------|----------|-------------|
+| `config.ini` | ✅ Yes | Application metadata configuration |
+| `<appid>.lang` | ✅ Yes | Multilingual file (14 languages) |
+| `<appid>.svg` | ✅ Yes | Application icon (SVG format) |
+| `docker-compose.yml` | ✅ Yes | Container orchestration configuration |
+
+> **Important Notes:**
+> - The `config.ini.icon` field must point to `/images/icons/<appid>.svg`. The platform handles the mapping during installation.
+> - The package name follows the format defined in [Chapter 4.2.1](04_Package_Specification.md#421-release-asset-naming-specification): `<appid>.tar.gz`
+> - For Docker applications with a UI, the `docker-compose.yml` must include the `x-app-meta` section (see Section 9.3).
+> - For Docker applications without a UI, the `x-app-meta` section is not required.
+
+
 
 ### 9.3 docker-compose.yml Specification
 
