@@ -1,3 +1,4 @@
+
 # 15. Publishing Process
 
 ### 15.1 Detailed Operation Workflow
@@ -18,13 +19,51 @@
 2. Complete application development and packaging according to this document's specifications
 3. Perform local testing and verification (see Chapter 13)
 
-#### Step 3: Create a Public Repository
+#### Step 3: Create a Release and Upload Package Assets
 
 1. Create a public repository on GitHub or Gitee
-2. Upload all required files (configuration files, application packages, icons, README.md, etc.)
-3. **Deb applications** — upload the `<appid>_<platform>.tar.gz` archive (containing the `<appid>.deb` data package and `<package>.deb` source package)
-4. **Docker applications** — upload `docker-compose.yml`, `config.ini`, `app.lang`, and icon files
-5. Include SHA-256 checksum files
+
+2. **Create a Release and Upload Package Assets**
+
+   The platform pulls application packages **exclusively from Releases** (GitHub Releases or Gitee Releases). **Do not** upload package files directly to the repository root.
+
+   **Step-by-step:**
+   - Go to the "Releases" page of your repository
+   - Click "Create a new release" (GitHub) or "新建发行版" (Gitee)
+   - **Tag version**: Must exactly match the `version` field in `config.ini` (format: `xx.yy.zzz`). Prefix `v` is optional but recommended (e.g., `v1.0.0` or `1.0.0`)
+   - **Release title**: Recommended to use the same version string (e.g., `v1.0.0`)
+   - **Attach binaries**: Upload the package file(s) as release assets following the naming conventions below
+
+3. **Package Asset Naming and Content Requirements**
+
+   The package file must follow the naming conventions below. Version numbers are **not** included in the file name — they are specified through the Release tag.
+
+   | Application Type | Required Asset Format | Naming Convention | Content Requirements |
+   |---|---|---|---|
+   | Deb (Single Package) | `.deb` file | `<app_id>_<platform>.deb` | Single deb package containing all application files, configuration, and metadata |
+   | Deb (Dual Package) | `.tar.gz` archive | `<app_id>_<platform>.tar.gz` | Must contain `<app_id>.deb` (data package) and `<package>.deb` (source package) |
+   | Docker Application | `.tar.gz` archive | `<app_id>.tar.gz` | Must contain `docker-compose.yml`, `config.ini`, `app.lang`, and icon files |
+
+   **Field Definitions:**
+   - `<app_id>`: Must exactly match the `id` field in `config.ini`
+   - `<platform>`: Must exactly match the `platform` field in `config.ini` (`x86_64` or `aarch64`)
+   - `<package>`: Must match the `package` field in `config.ini` (for dual-package mode)
+
+   > **Important:**
+   > - **Version numbers are not included in the package file name.** The version is specified via the Release tag.
+   > - **The Release tag must exactly match the `version` field in `config.ini`.**
+   > - The platform validates version consistency between the Release tag and `config.ini.version`. Mismatches will result in automated rejection.
+   > - **The platform pulls packages exclusively from Releases, not from the repository root.**
+   > - **Only the formats and naming conventions listed above are supported.** Non-compliant names will result in automated rejection.
+
+4. **Include SHA-256 checksum files**
+
+   For every package asset uploaded, generate and attach a corresponding `.sha256` checksum file:
+   ```bash
+   sha256sum <package_file> > <package_file>.sha256
+   ```
+
+   Example: `myapp_x86_64.deb` → `myapp_x86_64.deb.sha256`
 
 #### Step 4: Create an Application on the Developer Platform
 
@@ -44,6 +83,13 @@
    - Must match the `version` field in config.ini
 3. After submitting the version, the publishing application process begins
 
+> **Version Consistency Requirement:**
+> The version number you enter in Step 5 must match:
+> 1. The `version` field in `config.ini`
+> 2. The Release tag version created in Step 3
+>
+> **All three must be identical.** Mismatches will result in automated rejection.
+
 #### Step 6: Platform Automated Validation
 
 After submission, the platform automatically performs the following checks:
@@ -53,12 +99,15 @@ After submission, the platform automatically performs the following checks:
 - Icon validation (SVG format, path matching)
 - Checksum verification (SHA-256 matches uploaded files)
 - Version consistency validation (config.ini / DEBIAN/control / app.lang version match; Docker apps only check config.ini and app.lang version consistency, no DEBIAN/control check needed)
+- Release tag vs config.ini.version consistency validation
 
 **Common causes of automated validation failure:**
 - config.ini contains comments or syntax errors
 - app.lang is missing language nodes
 - Icon not found or incorrect format
 - Checksum mismatch
+- Release tag does not match config.ini.version
+- Package file name does not follow the required naming convention
 
 #### Step 7: Manual Review
 
@@ -93,9 +142,7 @@ After passing the review, the application will be listed on the TOS App Center w
 ### 15.2 Repository Requirements
 
 - Must be a **public repository** (GitHub or Gitee). Private repositories are not supported.
-- Must contain all required configuration files and application resources.
-- Deb applications must submit a `tar.gz` archive containing the `<appid>.deb` data package and `<package>.deb` source package.
-- Docker applications must submit `docker-compose.yml`, `config.ini`, `app.lang`, and icon files.
+- Package files must be uploaded as **Release assets**, not to the repository root.
 - Repository resources must remain available long-term. Published resources cannot be deleted.
 - The repository structure must conform to the specified directory layout.
 - All binary artifacts must be accompanied by SHA-256 checksum files.
