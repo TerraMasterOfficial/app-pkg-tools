@@ -2,7 +2,7 @@
 
 ### 16.1 Submission Automated Validation (Pre-filter)
 
-**Trigger Timing:** Executed in real time after a new version is submitted on the Developer Platform with the package uploaded / repository linked. Validation failure results in immediate blocking; no review ticket is generated and no initial review is entered.
+**Trigger Timing:** Executed in real time after a new version is submitted on the Developer Platform . Validation failure results in immediate blocking; no review ticket is generated and no initial review is entered.
 
 **Validation Coverage:**
 
