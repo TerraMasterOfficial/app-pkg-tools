@@ -1,101 +1,89 @@
-# Docker Application Template — TOS 7
+# TOS 7 Application Development and Publishing Guide
 
-> **⚠️ DEVELOPMENT GUIDE ONLY — DO NOT PACKAGE THIS FILE.**
-> Per Chapter 9.2 of the TOS 7 Application Development Guide, the submitted
-> `.tar.gz` archive MUST contain **exactly** the following 4 files and nothing else:
->
-> ```
-> <appid>.tar.gz
-> ├── config.ini          # Application metadata (JSON)
-> ├── <appid>.lang        # Multilingual file (14 languages)
-> ├── <appid>.svg         # Application icon (SVG)
-> └── docker-compose.yml  # Container orchestration config
-> ```
->
-> **Delete `README.md` (this file) before creating the archive.**
+**Version:** v2.7  
+**Last Updated:** 2026-05-27  
+**Applicable Platform:** TOS 7.0 and above  
+**Target Audience:** Global third-party developers, independent developers, enterprise partners  
 
-This template is generated from **Chapter 9 — Docker Development** of the
-[TOS 7 Application Development Guide](../../应用开发指南单独章节-英文版/docs/09_Docker_Development.md).
-The "Docker App Template" entry in Chapter 3 (Quick Start) points developers to
-this template for rapid application development.
+> 📢 This document is currently written based on TOS 7.0. Compatibility with subsequent TOS 7.x versions will be maintained.
 
-## Quick Start
+---
 
-```bash
-# 1. Copy this directory and rename it to your application id (e.g. my-awesome-app)
-# 2. Globally replace "myapp-docker" with your application id
-#    (config.ini id, docker-compose.yml service/container_name, file names,
-#     volume paths /Volume*/DockerAppData/<appid>/)
-# 3. Replace the image in docker-compose.yml with your Docker Hub image
-#    (fixed version tag required — NEVER ":latest")
-# 4. Update config.ini metadata (publisher, version, category, platform, ...)
-# 5. Update <appid>.lang descriptions (all 14 languages required)
-# 6. Replace myapp-docker.svg with your own icon (keep the <appid>.svg name)
-# 7. Test locally:
-#    docker compose up -d
-#    curl http://localhost:<port>/health
-# 8. Delete README.md, then package:
-#    tar -czf <appid>.tar.gz config.ini <appid>.lang <appid>.svg docker-compose.yml
-# 9. Submit <appid>.tar.gz to the TNAS Developer Platform
-#    (one submission per platform: x86_64 or aarch64)
+## 🚀 Quick Access
+
+| Scenario | Recommended Reading |
+|------|---------|
+| First time with TOS app development | [📘 Chapter 3 · Quick Start](/TOS%207%20Application%20Development%20Guide/03_Quick_Start.md) — Get started in 5 minutes |
+| Understanding the overall architecture | [📘 Chapter 2 · Architecture Strategy](/TOS%207%20Application%20Development%20Guide/02_Architecture_Strategy.md) — Container-first strategy |
+| Developing Deb applications | [📘 Chapter 8 · Deb Development](/TOS%207%20Application%20Development%20Guide/08_Deb_Development.md) — Complete specification |
+| Developing Docker applications | [📘 Chapter 9 · Docker Development](/TOS%207%20Application%20Development%20Guide/09_Docker_Development.md) — Docker Compose guide |
+| Preparing for publishing | [📘 Chapter 15 · Publishing Process](/TOS%207%20Application%20Development%20Guide/15_Publishing_Process.md) — Submit for review |
+| Troubleshooting | [📘 Chapter 19 · FAQ](/TOS%207%20Application%20Development%20Guide/19_FAQ.md) — Frequently asked questions |
+
+---
+
+## 📑 Full Table of Contents
+
+1. [Overview](/TOS%207%20Application%20Development%20Guide/01_Overview.md) |
+2. [Architecture Strategy](/TOS%207%20Application%20Development%20Guide/02_Architecture_Strategy.md) |
+3. [Quick Start](/TOS%207%20Application%20Development%20Guide/03_Quick_Start.md) |
+4. [Package Specification](/TOS%207%20Application%20Development%20Guide/04_Package_Specification.md) |
+5. [ABI Compatibility](/TOS%207%20Application%20Development%20Guide/05_ABI_Compatibility.md) |
+6. [Development Environment](/TOS%207%20Application%20Development%20Guide/06_Development_Environment.md) |
+7. [Application Types](/TOS%207%20Application%20Development%20Guide/07_Application_Types.md) |
+8. [Deb Development](/TOS%207%20Application%20Development%20Guide/08_Deb_Development.md) |
+9. [Docker Development](/TOS%207%20Application%20Development%20Guide/09_Docker_Development.md) |
+10. [Permission Model](/TOS%207%20Application%20Development%20Guide/10_Permission_Model.md) |
+11. [Package Signing](/TOS%207%20Application%20Development%20Guide/11_Package_Signing.md) |
+12. [Best Practices](/TOS%207%20Application%20Development%20Guide/12_Best_Practices.md) |
+13. [Local Testing & Debugging](/TOS%207%20Application%20Development%20Guide/13_Local_Testing.md) |
+14. [CI/CD Guide](/TOS%207%20Application%20Development%20Guide/14_CICD_Guide.md) |
+15. [Publishing Process](/TOS%207%20Application%20Development%20Guide/15_Publishing_Process.md) |
+16. [Review Standards](/TOS%207%20Application%20Development%20Guide/16_Review_Standards.md) |
+17. [Operations & Delisting](/TOS%207%20Application%20Development%20Guide/17_Operations_Delisting.md) |
+18. [Commercialization & Donations](/TOS%207%20Application%20Development%20Guide/18_Commercialization_Donations.md) |
+19. [FAQ](/TOS%207%20Application%20Development%20Guide/19_FAQ.md) |
+20. [Appendix](/TOS%207%20Application%20Development%20Guide/20_Appendix.md) |
+
+---
+
+## 📂 Repository Structure
+
+```
+docs/
+├── README.md            ← You are here
+├── 01_Overview.md
+├── 02_Architecture_Strategy.md
+├── 03_Quick_Start.md
+├── 04_Package_Specification.md
+├── 05_ABI_Compatibility.md
+├── 06_Development_Environment.md
+├── 07_Application_Types.md
+├── 08_Deb_Development.md
+├── 09_Docker_Development.md
+├── 10_Permission_Model.md
+├── 11_Package_Signing.md
+├── 12_Best_Practices.md
+├── 13_Local_Testing.md
+├── 14_CICD_Guide.md
+├── 15_Publishing_Process.md
+├── 16_Review_Standards.md
+├── 17_Operations_Delisting.md
+├── 18_Commercialization_Donations.md
+├── 19_FAQ.md
+├── 20_Appendix.md
 ```
 
-## Directory Structure
+---
 
-```
-<appid>/
-├── config.ini              # Application metadata (JSON) — Docker fields included
-├── <appid>.lang            # Multilingual file (14 languages)
-├── <appid>.svg             # App icon (SVG, 128x128 recommended)
-├── docker-compose.yml      # Compose Spec 3.8+, all Chapter 9 rules applied
-└── README.md               # ← DELETE before packaging
-```
+## 🔗 Related Resources
 
-## Compliance Checklist (Chapter 9)
+- [TOS Developer Platform](https://developer.terra-master.com) 
+- [Deb App Template (Single Package)](https://github.com/TerraMasterOfficial/app-pkg-tools/tree/main/TOS%207-template-deb-single)
+- [Deb App Template (Dual Package)](https://github.com/TerraMasterOfficial/app-pkg-tools/tree/main/TOS%207-template-deb-dual)
+- [Docker App Template](https://github.com/TerraMasterOfficial/app-pkg-tools/tree/main/TOS%207-template-docker)
+- [TOS App Center](https://terra-master.com)
 
-| Rule | Requirement |
-|---|---|
-| **Package** | `.tar.gz` with exactly 4 files: config.ini, `<appid>.lang`, `<appid>.svg`, docker-compose.yml |
-| **Image source** | Docker Hub ONLY — ① official project images (nginx, postgres) ② verified publishers ③ well-known community images (linuxserver/*). Rejected: ghcr.io / quay.io / private registries / unverified personal images |
-| **Image tag** | Lock to a specific version. `:latest` is prohibited |
-| **No root** | Non-root user via `user:` field. `privileged: true` strictly prohibited |
-| **No host network** | `network_mode: host` strictly prohibited (except approved system network tools); use port mapping |
-| **Version** | Compose Spec 3.8+ |
-| **Container name** | Must match the application `id` |
-| **Restart policy** | `unless-stopped` for normal services |
-| **Data persistence** | All data dirs mounted to `/Volume*/DockerAppData/<appid>/...` (`*` = volume number chosen at install) |
-| **Ports** | Host port NOT in disabled list: 22, 80, 443, 8181, 5050. Recommended range: 8000-19999; verify free on TNAS before submission |
-| **Timezone** | Explicitly configured: `TZ=Asia/Shanghai` + user override `TZ=${TZ:-Asia/Shanghai}` |
-| **Health check** | Required for EVERY service; multi-container uses `depends_on: condition: service_healthy` |
-| **x-app-meta** | Required for Web UI apps (appended at end of compose); NOT needed for headless apps |
-| **Secrets** | No hardcoded passwords/tokens in image or compose — use env vars / .env |
-| **Security scan** | Run `docker scan` or `trivy` before submission |
-| **Line endings** | All files must use LF (not CRLF) |
+---
 
-## config.ini — Docker-specific Fields
-
-| Field | Description | Example |
-|---|---|---|
-| `application_type` | Fixed to `"docker"` | `"docker"` |
-| `compose_project` | Compose project name = app id | `"myapp-docker"` |
-| `user` | Runtime user | `"myapp"` |
-| `depend` | Must include `"DockerEngine"` | `["DockerEngine"]` |
-| `relation` | Related apps | `["docker", "DockerEngine"]` |
-| `path` | WebUI access path | `"http://${ip}:8080"` |
-| `icon` | `/images/icons/<appid>.svg` (platform maps it to the package-root SVG) | `/images/icons/myapp-docker.svg` |
-
-> **Prerequisite note:** Docker Engine is NOT pre-installed in TOS 7 — it is an
-> App Center application. The platform automatically checks and prompts for
-> installation when a Docker-based app is installed; no developer action needed.
-
-## Multi-Architecture
-
-Set the correct `platform` field in config.ini (`x86_64` or `aarch64`) for each
-submission. Docker images may support both architectures via manifest, but TOS
-requires separate submissions per platform.
-
-## Resources
-
-- [Chapter 9 — Docker Development](../../应用开发指南单独章节-英文版/docs/09_Docker_Development.md)
-- [Chapter 3 — Quick Start](../../应用开发指南单独章节-英文版/docs/03_Quick_Start.md)
-- [TNAS Developer Platform](https://developer.terra-master.com)
+*This document was generated by splitting [TOS 7 Application Development and Publishing Guide]. Each chapter is maintained independently.*
