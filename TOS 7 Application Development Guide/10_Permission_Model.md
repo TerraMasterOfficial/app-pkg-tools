@@ -183,6 +183,8 @@ For transparency, applications should document their permission requirements in 
 | User: `<your-appid>` (system user) | Isolated service execution |
 | Shared Folder: None | No user data access required |
 
+> **Runtime file manifest:** This table declares *permissions*. You must additionally declare every file/directory your application *creates at runtime* (temp files, generated config, logs, caches) in the required manifest — see [Section 12.9.6](12_Best_Practices.md#1296-application-declared-runtime-file-manifest-required).
+
 
 ### 10.9 Permission Red Lines (Automatic Rejection)
 
