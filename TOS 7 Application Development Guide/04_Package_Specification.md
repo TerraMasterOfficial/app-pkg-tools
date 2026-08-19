@@ -212,6 +212,42 @@ for root, _, files in os.walk("your_app_source/"):
 git config --global core.autocrlf input
 ```
 
+### 4.7 Runtime Filesystem Layout
+
+> **Scope:** Sections 4.1–4.6 and Chapter 8 define the **static** package structure — the files shipped inside the `.deb`/`.tar.gz`. This section defines the **runtime footprint**: which additional files and directories appear on the TOS system after the application is installed and running. For the full per-path reference, lifecycle table, and self-review checklist, see [Section 12.9](12_Best_Practices.md#129-runtime-filesystem-layout).
+
+**Path model:** Deb payloads use logical `/usr/local/<appid>/` paths as defined in Chapter 8, while App Center installs third-party applications on the user-selected data volume at `/Volume*/@apps/<appid>/`. The mapping is platform-managed; developers must not assume that both paths are independent physical copies.
+
+An application's footprint is divided into three categories that are treated differently on uninstall:
+
+| Category | Location | Examples | Uninstall Behavior |
+|---|---|---|---|
+| **Static install files** | `/Volume*/@apps/<appid>/` (logical Deb payload path: `/usr/local/<appid>/`) | config.ini, bin/, init.d/, nginx/, webui.bz2 | Managed by App Center/package lifecycle |
+| **Application runtime data** | `/Volume*/@apps/<appid>/data`, `/Volume*/@apps/<appid>/logs` | State, caches, logs, temporary data | Preserve required state across upgrade; remove only under an explicit cleanup policy |
+| **User business data** | `/Volume*/<appid>/` (shared folder) | documents, media, databases | **Never auto-deleted**; retained across upgrades and uninstall |
+
+**Runtime paths and conditions:**
+
+| Path | Requirement / Creator | Purpose | Cleanup |
+|---|---|---|---|
+| `/Volume*/@apps/<appid>/data`, `/Volume*/@apps/<appid>/logs` | Application/lifecycle script, when used | Writable state and logs on the data disk | Follow the documented package policy |
+| `/Volume*/<appid>/` | `ter_share_add` or `share_folders`, when user-visible data is needed | User business data (SMB/NFS) | **Retained** (never auto-deleted) |
+| `/var/api/<appid>.sock` | Required for iframe apps; created by the application | Unix socket for platform proxy (mode `0660`) | Remove stale socket before bind and clean package-owned residue |
+| `/var/lib/<appid>/`, `/var/log/<appid>/` | Optional compatibility paths; must be explicitly created | App-specific state or logs | Delete only when package-owned and documented |
+| `/run/<appid>/` | Only with `RuntimeDirectory=<appid>` | PID files and runtime sockets | systemd-managed |
+| Service-private `/tmp` | Only with `PrivateTmp=true` | Isolated temporary files | systemd-managed; physical host path is internal |
+| systemd enablement links | Platform/lifecycle script | Service boot registration | Platform/package-managed; do not assume a fixed `/etc/systemd/system/<id>.service` path |
+| `/Volume*/DockerAppData/<appid>/` | Docker apps | Persistent config & data volumes | Kept unless user chooses to remove volumes |
+
+**Key rules:**
+
+1. `/etc`, `/usr`, and `/boot` are protected system directories. Third-party applications must not store writable application configuration there; use the application data directory on `/Volume*/`.
+2. `PrivateTmp=true` and `RuntimeDirectory=<appid>` create conditional systemd-managed runtime views. Do not document their paths as unconditional artifacts.
+3. iframe applications must remove stale `/var/api/<appid>.sock` before binding.
+4. Never delete user data in `/Volume*/<appid>/` on upgrade or uninstall. Delete runtime data only when its owner and retention policy are explicitly defined.
+5. Docker application persistence must use volume mounts under `/Volume*/`. Docker Engine's host-side data root is platform-managed and must not be hardcoded or described as a container path.
+6. Every application must additionally declare, in its own README, every file it creates at runtime (temp files, generated config, logs, caches) using the required manifest template — see [Section 12.9.6](12_Best_Practices.md#1296-application-declared-runtime-file-manifest-required). Applications must not write to undocumented, arbitrary paths — especially `/tmp` — at runtime.
+
 ---
 
 ← [Previous Chapter: Quick Start](03_Quick_Start.md) &nbsp;&nbsp;|&nbsp;&nbsp; [Next Chapter: ABI Compatibility](05_ABI_Compatibility.md) → &nbsp;&nbsp;|&nbsp;&nbsp; [📖 Back to Table of Contents](../README.md)
