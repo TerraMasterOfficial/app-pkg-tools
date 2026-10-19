@@ -2,100 +2,132 @@
 
 ### 16.1 Submission Automated Validation (Pre-filter)
 
-**Trigger Timing:** Executed in real time after a new version is submitted on the Developer Platform . Validation failure results in immediate blocking; no review ticket is generated and no initial review is entered.
+**Trigger Timing:** Executed in real time after a new version is submitted on the Developer Platform . Validation failure results in immediate blocking; no review ticket is generated and no initial review is entered. There is no warning level: every threshold is a hard rejection, and a failed submission writes no version record at all (agent-api §6.5).
 
 **Validation Coverage:**
 
+> **Note:** The automated pre-filter checklist below is the **same unified checklist** as the Developer Platform package-validation rules (**agent-api §6.5.1–§6.5.4** — a fixed set of ten checks, three at the download stage and seven at the parse stage); the two lists must stay in sync.
+>
+> The **API Auto-Check** column records, row by row, whether the Developer Platform API enforces that row during automated validation. Rows marked **No — manual review / specification requirement** are exactly the ones the API declares out of scope in **agent-api §6.5.6 ("What the platform does not validate")**; they stay in this checklist because they are specification requirements that developers must still meet and that manual review enforces.
+
 #### config.ini Validation
 
-| Check Item | Description | Reference |
-|---|---|---|
-| Valid JSON syntax (no comments, no trailing commas, no single quotes outside double quotes) | Validate using `python3 -m json.tool` | 8.4 config.ini Specification |
-| No single quotes, no inline comments | JSON standard only allows double quotes; `//` or `/* */` are treated as comments | 8.4 config.ini Specification |
-| All required fields present (id/icon/publisher/exec/version/low_version/category/platform/application_type/user) | Check against the user-confirmed required fields checklist item by item (必填字段以用户确认清单为准) | 8.4.3 Key Rules |
-| type and open_path are mutually exclusive (both cannot exist) | Deb iframe apps use the `type` field; Deb external-open and Docker apps use the `open_path` field. They are mutually exclusive and cannot coexist | 8.4.2 Field Reference |
-| path field must use `${ip}` placeholder; no hardcoded IP or domain | All URL-type path must be written as `http://${ip}:<port>` | 8.4.3 Key Rules |
-| platform field matches the actual submitted package architecture | e.g., if platform declares `x86_64`, binaries in the package must be x86_64 architecture | 8.4.2 Field Reference |
+| Check Item | Description | Reference | API Auto-Check |
+|---|---|---|---|
+| Valid JSON syntax (no comments, no trailing commas, no single quotes outside double quotes) | Validate using `python3 -m json.tool` | 8.4 config.ini Specification | Yes — `invalid_config_ini` (the file is parsed as JSON) |
+| No single quotes, no inline comments | JSON standard only allows double quotes; `//` or `/* */` are treated as comments | 8.4 config.ini Specification | Yes — `invalid_config_ini` (single quotes and comments simply fail JSON parsing; there is no separate check) |
+| All required fields present (id/icon/publisher/exec/version/low_version/category/platform/application_type/user) | Check against the user-confirmed required fields checklist item by item (必填字段以用户确认清单为准) | 8.4.3 Key Rules | Yes — `invalid_config_ini` requires the same ten fields to exist and be non-empty, and additionally requires each value to match its type convention (e.g. a boolean field may not be written as a string) |
+| type and open_path are mutually exclusive (both cannot exist) | Deb iframe apps use the `type` field; Deb external-open and Docker apps use the `open_path` field. They are mutually exclusive and cannot coexist | 8.4.2 Field Reference | No — manual review / specification requirement (agent-api §6.5.6: no `config.ini` field other than `id` / `application_type` / `platform` is ever evaluated) |
+| `open_path` must be `true` for Docker apps with a UI, with `path` set to `http://${ip}:<port>` | Mutual exclusion is not the whole rule: a Docker application has no iframe UI, so `open_path: true` is **mandatory**. Omitting it leaves the app opening as an embedded iframe whose page cannot render (rejection code `tool-C23` — see Appendix N) | 8.4.2 Field Reference / 9.3 | No — manual review / specification requirement (same agent-api §6.5.6 scope: field *values* are never evaluated) |
+| path field must use `${ip}` placeholder; no hardcoded IP or domain | URL-type path may be written as `http://${ip}:<port>`; the route form `/<app_id>/` is also accepted | 8.4.3 Key Rules | No — manual review / specification requirement (agent-api §6.5.6, same reason as the row above) |
+| platform field matches the actual submitted package architecture | e.g., if platform declares `x86_64`, binaries in the package must be x86_64 architecture | 8.4.2 Field Reference | Partial — `platform_mismatch` only checks that `config.ini`'s `platform` equals the architecture registered for the App (`x86_64` / `aarch64`); package binaries are never read, so architecture-versus-binary conformance stays a manual / testing item |
+| `id` must not start with the reserved `tos` prefix | `tos` is reserved by the platform in the nginx route/command namespace; an `id` starting with `tos` (e.g. `tos-log-server`) collides with the platform's own nginx entries and the application page cannot be opened normally (FB-20261017-002) | 8.4.2 Field Reference / 8.11 Nginx Configuration Specification | No — manual review / specification requirement (agent-api §6.5.6: the API only compares `id` for `app_id_mismatch` and duplicate detection; no prefix rule is evaluated) |
 
 #### app.lang Validation
 
-| Check Item | Description | Reference |
-|---|---|---|
-| All 14 language nodes present (keys complete) | Missing any language node results in immediate blocking | 8.5 app.lang Specification |
-| name / descript fields non-empty for all languages | Empty fields must be filled with English translations; blank strings not allowed | 8.5.3 Field Descriptions |
-| File encoding is UTF-8 without BOM | EF BB BF bytes not allowed at file header | 8.5.5 File Encoding & Format |
-| All line endings must be LF (\\n); CRLF (\\r\\n) prohibited | A common cross-platform collaboration issue; Windows developers must pay extra attention | 4.6 Cross-Platform Line Ending Specification |
+| Check Item | Description | Reference | API Auto-Check |
+|---|---|---|---|
+| Language coverage covers the language set required by the target TOS version (14 for TOS 7.0, 26 for TOS 7.1; supersets allowed) | Missing any required language node results in immediate blocking | 8.5 app.lang Specification | Partial — `invalid_language_files` requires all 14 TOS 7.0 sections (zh-cn, zh-hk, en-us, fr-fr, de-de, it-it, es-es, hu-hu, ja-jp, ko-kr, pl-pl, ru-ru, tr-tr, pt-pt); sections outside those 14 are neither checked nor rejected. The 26-language TOS 7.1 coverage is a specification requirement not yet enforced by the API (agent-api §6.5.4) |
+| name / auth / descript fields non-empty for all languages; release_note / important may be empty | Every submitted language must contain non-empty content; blank strings and punctuation-only placeholders are not accepted. Filling an untranslated language with the English text (an English copy) is accepted | 8.5.3 Field Descriptions | Yes — `invalid_language_files` requires `name` / `auth` / `descript` to be non-empty and treats `release_note` as optional |
+| File encoding is UTF-8 without BOM | EF BB BF bytes not allowed at file header | 8.5.5 File Encoding & Format | No — manual review / specification requirement (the API runs no encoding check) |
+| All line endings must be LF (\\n); CRLF (\\r\\n) prohibited | A common cross-platform collaboration issue; Windows developers must pay extra attention | 4.6 Cross-Platform Line Ending Specification | No — manual review / specification requirement (the API runs no line-ending check) |
 
 #### Resource File Validation
 
-| Check Item | Description | Reference |
-|---|---|---|
-| Icon format is SVG | PNG/JPG/ICO or other bitmap formats are not accepted | 8.6 Application Icons |
-| SVG has transparent background, valid viewBox | viewBox attribute must exist with reasonable values | 8.6 Application Icons |
-| Icon file path exactly matches the `icon` field in config.ini | Including case sensitivity and directory hierarchy | 8.6 Application Icons |
-| All script files (.sh/.py/.pl) must not use CRLF line endings | Unified LF line endings | 4.6 Cross-Platform Line Ending Specification |
+| Check Item | Description | Reference | API Auto-Check |
+|---|---|---|---|
+| Icon format is SVG | PNG/JPG/ICO or other bitmap formats are not accepted | 8.6 Application Icons | Yes (indirect) — the required icon path ends in `{AppID}.svg`, so a non-SVG file is not found at that path; icon *semantics* are not checked |
+| Icon file size is within the platform-accepted range | An oversized icon file is rejected | 8.6 Application Icons (agent-api §6.5.3) | Yes — icon content over **50 KB** fails `icon_validation_failed`; an archive entry over 1 MiB fails `package_unzip_failed` |
+| SVG has transparent background, valid viewBox | viewBox attribute must exist with reasonable values | 8.6 Application Icons | No — manual review / specification requirement (agent-api §6.5.6: `viewBox`, dimensions and colours are ignored, and the root element need not be `svg`) |
+| Icon file path exactly matches the `icon` field in config.ini | Including case sensitivity and directory hierarchy | 8.6 Application Icons | No — manual review / specification requirement (agent-api §6.5.6: `config.ini`'s `icon` field is never compared with the icon file; the API only requires the icon at the fixed path `usr/local/{AppID}/images/icons/{AppID}.svg`) |
+| All script files (.sh/.py/.pl) must not use CRLF line endings | Unified LF line endings | 4.6 Cross-Platform Line Ending Specification | No — manual review / specification requirement (the API runs no line-ending check) |
 
 #### Package Structure Validation
 
-| Check Item | Description | Reference |
-|---|---|---|
-| Package identity comes from `config.ini`, not from the file name | After downloading and parsing the package, the platform compares the `id`, `platform`, and package type in `config.ini` with the application information entered on the Developer Platform. The asset file name is **not** validated; the recommended name is a developer convenience only | 4.2.4 Release Asset Naming Specification |
-| Dual-package data package (data.tar.gz) must not contain binary executable files (except lifecycle scripts such as postinst/preinst under the DEBIAN directory) | Business programs and runtime binaries must not appear in the data package | 8.17 Dual-Package Mode Specification |
-| Deb metadata files (config.ini / <appid>.lang / icon) must be under `data.tar` at `./usr/local/<appid>/`, not at the deb root | The parser reads metadata from this path; files at the deb root cause an unrecoverable metadata parse failure | 8.2 General Directory Structure |
-| Directory name case compliance (all lowercase, consistent with config.ini declarations) | Linux file system is case-sensitive | 8.2 Common Directory Structure |
+| Check Item | Description | Reference | API Auto-Check |
+|---|---|---|---|
+| Required metadata files complete (config.ini / `<appid>.lang` / icon file) | The package must contain config.ini, `<appid>.lang` and the icon file; missing any one of them results in immediate blocking (agent-api §6.5.2 / §6.5.4) | 8.2 General Directory Structure | Yes — `missing_required_files` |
+| Package identity comes from `config.ini`, not from the file name | After downloading and parsing the package, the platform compares the `id`, `platform`, and package type in `config.ini` with the application information entered on the Developer Platform. The asset file name is **not** validated; the recommended name is a developer convenience only | 4.2.4 Release Asset Naming Specification | Yes — the asset file name, extension and `Content-Type` are never checked; `app_id_mismatch` compares `config.ini`'s `id` with the App ID **case-sensitively** |
+| Dual-package data package (data.tar.gz) must not contain binary executable files (except lifecycle scripts such as postinst/preinst under the DEBIAN directory) | Business programs and runtime binaries must not appear in the data package | 8.17 Dual-Package Mode Specification | No — manual review / specification requirement (agent-api §6.5.6: executable content is never read) |
+| Deb metadata files (config.ini / <appid>.lang / icon) must be under `data.tar` at `./usr/local/<appid>/`, not at the deb root | The parser reads metadata from this path; files at the deb root cause an unrecoverable metadata parse failure | 8.2 General Directory Structure | Yes — `missing_required_files` looks for `usr/local/{AppID}/config.ini`, `usr/local/{AppID}/{AppID}.lang` and `usr/local/{AppID}/images/icons/{AppID}.svg` (paths are case-sensitive) |
+| Directory name case compliance (all lowercase, consistent with config.ini declarations) | Linux file system is case-sensitive | 8.2 Common Directory Structure | Partial — the required paths and the App ID comparison are case-sensitive, but no separate "all lowercase" rule exists |
+| Nginx configuration file `<app_id>.conf` shipped for WebUI external-open apps; the portal block `location /<app_id>/` is **not** required to contain `proxy_pass` | A portal block that only sets the proxy headers is compliant when the application ships its own frontend Web panel and its service is reachable through the application socket (`/var/api/<app_id>.sock`, reached through the sibling block `location ^~ /v2/proxy/<app_id>/`). Adding `proxy_pass` to the portal block is an optional improvement (advisory list: 12 §12.10); a missing `proxy_pass` is never a ground to block or reject a version (FB-20261017-001; N03 withdrawn). The nginx configuration file name `<app_id>.conf` and the route prefix `location /<app_id>/` it defines are derived from the App ID and must not start with the reserved `tos` prefix (FB-20261017-002) | 8.3.2 / 8.11 Nginx Configuration Specification | No — the API's ten download/parse checks (agent-api §6.5.1–§6.5.4) contain no nginx-configuration check and the nginx configuration is never read; this row is a specification requirement upheld by manual review |
+
+#### docker-compose.yml Validation (Docker applications only)
+
+| Check Item | Description | Reference | API Auto-Check |
+|---|---|---|---|
+| Compose file parses successfully | Run `docker compose config -q`; any reported error blocks the submission | 9.3 docker-compose.yml Specification / 13.2 | No — manual review / specification requirement (the API never reads `docker-compose.yml`) |
+| Every named volume referenced by a service is declared under the top-level `volumes:` key | If `services.<svc>.volumes` uses `name:/container/path`, the top-level `volumes:` key must declare `name`. A service-level reference alone makes Compose reject the whole project (`service "x" refers to undefined volume "y"`) before any image is pulled | 9.3 Rule 4 | No — manual review / specification requirement (the API never reads `docker-compose.yml`) |
+| `x-app-meta.web.port` is exposed by a port mapping | The port declared in `x-app-meta.web` must appear as a host port under `services.<svc>.ports`; otherwise the app installs but the Web UI is unreachable | 9.3 Rule 2 | No — manual review / specification requirement |
+| `open_path` is `true` for Docker apps with a UI, and `path` is `http://${ip}:<port>` | Docker applications with a Web UI always open in a new browser tab: `open_path: true` is **mandatory**, not merely "mutually exclusive with `type`". Omitting it leaves the app opening as an embedded iframe with no UI to render (rejection code `tool-C23`) | 8.4.2 Field Reference / 9.3 | No — manual review / specification requirement (agent-api §6.5.6: no `config.ini` field other than `id` / `application_type` / `platform` is ever evaluated) |
+| `exec` is `true` for Docker applications | Without it the App Center cannot start/stop the application | 8.4.2 Field Reference | No — manual review / specification requirement (agent-api §6.5.6) |
+| A non-root `user` (UID:GID) is declared in every service | A missing `user` field defaults to root inside the container, which is a one-vote-veto rejection | 9.4 Image & Security Requirements / 10.3 | No — the API never reads `docker-compose.yml` |
+
+> **Note:** these rows are specification / manual-review requirements — the Developer Platform API runs no `docker-compose.yml` checks at all (see 16.2). Developers can catch them locally before submission with `docker compose config -q` (13.2 Step 2).
 
 #### Dependency Validation
 
-| Check Item | Description | Reference |
-|---|---|---|
-| Docker app `depend` field must include `DockerEngine` | Without it, the Docker environment cannot be guaranteed ready at install time | 8.4.2 Field Reference |
+| Check Item | Description | Reference | API Auto-Check |
+|---|---|---|---|
+| Docker app `depend` field must include `DockerEngine` | Without it, the Docker environment cannot be guaranteed ready at install time | 8.4.2 Field Reference | No — manual review / specification requirement (agent-api §6.5.6: `config.ini` field values other than `id` / `application_type` / `platform` are never evaluated) |
 
 #### Version Rule Validation
 
-| Check Item | Description | Reference |
-|---|---|---|
-| *(No version-number checks are performed)* | The platform does **not** validate version numbers — not the format, not incrementation, not duplicates, and not consistency between `config.ini` and `DEBIAN/control`. See 4.2 for the recommendations that follow from App Center update detection | 4.2 Version Number Specification |
+| Check Item | Description | Reference | API Auto-Check |
+|---|---|---|---|
+| Version format, incrementation, and consistency required | The format and the numeric increment must comply with 4.2.1. Keep `config.ini` and `DEBIAN/control` in sync (see 4.2.2) | 4.2 Version Number Specification | **No** — the API never inspects version semantics: the Version Number only has to be non-empty, there is no semantic-version or ordering requirement, and duplicate version numbers may be submitted (agent-api §6.5.6). The release `tag` is never compared with `config.ini`'s `version`, and `.deb` control information is not read at all, so `config.ini` / `DEBIAN/control` consistency is out of scope for the API. This row is a specification requirement upheld by manual review |
 
 #### Hash Validation
 
-| Check Item | Description | Reference |
-|---|---|---|
-| The SHA-256 of the uploaded package must exactly match the declared sha256 at submission | Prevents transmission corruption or tampering | 8.15 Packaging & Checksums |
+| Check Item | Description | Reference | API Auto-Check |
+|---|---|---|---|
+| The SHA-256 of the uploaded package must exactly match the declared sha256 at submission | Prevents transmission corruption or tampering | 8.15 Packaging & Checksums | **No** — the API never reads package signatures (agent-api §6.5.6). Hash verification is carried out by review staff against the recorded baseline (see 16.3.2 and the "Checksum mismatch" veto item in 16.4), not by automated validation |
 
 **Result Notification:** Automated validation failure only shows a popup with error description and documentation link; no review ticket is generated. Developers fix and resubmit, which re-triggers automated validation. Only after all checks pass can the process proceed to the 16.2 Manual Review workflow.
 
 ### 16.2 Four Review Dimensions
 
+> **Note:** This section describes the **manual review** that runs only after the §16.1 automated validation has passed. The items the platform explicitly does **not** validate automatically (agent-api §6.5.6) are handled here by review staff, so the two sections are complementary rather than contradictory.
+
 | Dimension | Review Content | Reviewer |
 |---|---|---|
-| **Configuration Completeness** | config.ini correct JSON format, app.lang with all 14 languages, SVG-compliant icon, no missing required fields, valid systemd service file | Dedicated Review Staff |
+| **Configuration Completeness** | config.ini correct JSON format, app.lang covering the language set required by the target TOS version (14 / 26), required package metadata files complete (config.ini / `<appid>.lang` / icon), SVG-compliant icon within the accepted size range (≤ 50 KB), no missing required fields, valid systemd service file, App ID and the nginx names derived from it (`nginx/<appid>.conf`, the route prefix) do not start with the reserved `tos` prefix (FB-20261017-002) | Dedicated Review Staff |
 | **Functional Availability** | Install/start/stop/uninstall complete without errors, correct architecture adaptation, functionality matches description, ports available without conflicts | Testing Support Staff |
 | **Security** | No hardcoded credentials, non-root execution, no privileged mode, no malicious code, no vulnerabilities, no prohibited scripts, hash verification passed | Technical Support Staff |
 | **Compliance** | Content is legal and compliant, no intellectual property infringement, description matches functionality, repository is public, directory structure conforms to specification | Dedicated Review Staff |
 
 #### Configuration Completeness — Detailed Checklist
 
+**Required metadata files:**
+- The package must contain `config.ini`, `<appid>.lang` and the icon file; missing any one of them is rejected
+- See 8.2 General Directory Structure
+
 **config.ini:**
 - JSON without comments (`//`, `/* */`), no trailing commas
 - No single quotes; all strings use double quotes
 - All required fields present: `id` / `icon` / `publisher` / `exec` / `version` / `low_version` / `category` / `platform` / `application_type` / `user` (必填字段以用户确认清单为准)
 - `type` and `open_path` are mutually exclusive: Deb iframe apps use `type` only; Deb external-open and Docker apps use `open_path` only; the two must not coexist
+- Docker apps with a UI must set `open_path: true` (and `path: "http://${ip}:<port>"`) — rejection code `tool-C23`; see 9.3 and 16.1
 - `path` field must use `${ip}` placeholder; hardcoded IP, domain, or localhost is prohibited
-- `version` / `system_id` / `package` version numbers consistent (recommended only — the platform does not validate this)
+- `version` / `system_id` / `package` version numbers consistent (see 4.2.2) — a specification requirement checked here at manual review: the platform's automated validation does not inspect version numbers at all (agent-api §6.5.6)
 - `platform` field matches actual submitted package architecture
+- `id` must not start with the reserved `tos` prefix (FB-20261017-002) — `tos` is reserved by the platform in the nginx route/command namespace; an `id` such as `tos-log-server` collides with the platform's own nginx entries and the application page cannot be opened normally (see 8.4.2 / 8.11)
 - See 8.4 config.ini Specification
 
 **app.lang:**
-- All 14 language nodes present (zh-cn, zh-hk, en-us, fr-fr, de-de, it-it, es-es, hu-hu, ja-jp, ko-kr, pl-pl, ru-ru, tr-tr, pt-pt)
-- `name` / `descript` fields non-empty for all languages; empty fields must be filled with English translations
+- Language set covers at least the languages required by the target TOS version (14 for TOS 7.0, 26 for TOS 7.1; supersets allowed) — TOS 7.0 baseline: zh-cn, zh-hk, en-us, ko-kr, ja-jp, de-de, fr-fr, it-it, es-es, hu-hu, pl-pl, tr-tr, ru-ru, pt-pt; TOS 7.1 additional: cs-cz, da-dk, nl-nl, nb-no, sv-se, el-gr, ro-ro, th-th, vi-vn, id-id, ar-sa, he-il
+- `name` / `auth` / `descript` fields non-empty for all languages (`release_note` / `important` may be empty); blank strings and punctuation-only placeholders are not accepted — filling an untranslated language with the English text (an English copy) is acceptable
 - File encoding UTF-8 without BOM
 - All line endings LF (`\n`); CRLF (`\r\n`) prohibited
+- Note: automated validation currently enforces the 14-section TOS 7.0 set only (agent-api §6.5.4); the TOS 7.1 26-language coverage is verified here at manual review
 - See 8.5 app.lang Specification
 
 **Icon:**
 - SVG format, transparent background
 - Contains a valid `viewBox` attribute
-- Icon file path exactly matches the `icon` field in config.ini (including case sensitivity)
+- Icon file size is within the platform-accepted range (≤ 50 KB; oversized icons are rejected)
+- Icon file path exactly matches the `icon` field in config.ini (including case sensitivity) — this is a specification self-check: the platform reads the icon from the fixed path `usr/local/{AppID}/images/icons/{AppID}.svg` and does not compare it with the `icon` field (agent-api §6.5.6)
 - See 8.6 Application Icons
 
 **systemd (Deb apps only):**
@@ -104,6 +136,15 @@
 - Includes `ProtectSystem=strict` or `ProtectSystem=full` system protection parameters
 - Recommended: include `NoNewPrivileges=yes` / `PrivateTmp=yes` and other security hardening parameters
 - See 8.12 Systemd Service Specification
+
+**nginx (Deb WebUI external-open apps only):**
+- The package must ship `nginx/<app_id>.conf`; the file must not contain a `server {}` block — use `location /<app_id>/ {}` blocks only
+- The portal block `location /<app_id>/` is **not required** to contain `proxy_pass`: a block carrying only `proxy_http_version` / `proxy_set_header` is compliant when the application ships its own frontend Web panel and directly provides the application address, with its service reachable through the application socket `/var/api/<app_id>.sock` (the sibling block `location ^~ /v2/proxy/<app_id>/` proxies to `unix:/var/api/<app_id>.sock`), so the portal block does not have to forward traffic itself
+- Adding `proxy_pass http://127.0.0.1:<listen_port>/;` to the portal block is an **optional improvement**, not a review requirement, and must never be used as a ground for rejection; it is recorded as an advisory item in 12 §12.10 Optional Improvements (Advisory)
+- A version must never be rejected or blocked on the ground that the portal block lacks `proxy_pass` (FB-20261017-001, 2026-10-17: N03 withdrawn; the same calibration applies to all comparable applications, e.g. GitBucket / Sonarr)
+- Where the portal block *does* carry `proxy_pass`, check that its port matches the backend listening port
+- The nginx configuration file name `<app_id>.conf` and the route prefix `location /<app_id>/` are derived from the App ID and must **not** start with the reserved `tos` prefix (FB-20261017-002) — a `tos`-prefixed name collides with the platform's own nginx entries and the application page cannot be opened; automated validation does not read the nginx configuration, so this is upheld at manual review
+- See 8.3.2 / 8.11 Nginx Configuration Specification
 
 #### Functional Availability — Detailed Checklist
 
@@ -184,14 +225,14 @@ Each position provides a clear review opinion (approve/reject with specific reas
 | Rank | Rejection Reason | Correction Suggestion | Applicable Scope | Reference |
 |---|---|---|---|---|
 | 1 | config.ini contains comments, syntax errors, or missing fields (this issue is intercepted during the automated validation phase; developers receive an immediate prompt after submission.) | Remove all comments; validate JSON format with `python3 -m json.tool` | All apps | 8.4 config.ini Specification |
-| 2 | app.lang is missing language nodes or has empty fields | Complete all 14 languages; fill untranslated ones with English | All apps | 8.5 app.lang Specification |
+| 2 | app.lang is missing language nodes or has empty fields | Complete the languages required by the target TOS version (14 for TOS 7.0, 26 for TOS 7.1; supersets allowed); fill untranslated ones with English | All apps | 8.5 app.lang Specification |
 | 3 | Docker compose image source is not from Docker Hub | Host images on Docker Hub; ghcr.io / private registries are prohibited | Docker only | 9.4 Image & Security Requirements |
 | 4 | Repository is not public or resources are missing | Set repository to public; upload complete resources (README/source code/configurations) | All apps | 15.2 Repository Requirements |
 | 5 | App functionality description does not match actual functionality | Correct the `descript` field in app.lang to ensure descriptions are verifiable | All apps | 8.5.3 Field Descriptions |
 | 6 | Duplicate id field | Use a globally unique application ID; search and confirm on the platform before submission | All apps | 8.4.2 Field Reference |
 | 7 | Icon format does not meet requirements or path does not match | Use SVG format (transparent background + viewBox); path must exactly match config.ini `icon` | All apps | 8.6 Application Icons |
 | 8 | Deb package service cannot start/stop or has residual files after uninstall | Improve systemd service file and preinst/postinst/postrm lifecycle scripts | Deb only | 8.12 Systemd Service Specification |
-| 9 | Docker port conflict, no data persistence | Ensure ports do not conflict with system reserved ports; add volumes for data persistence | Docker only | 9.3 docker-compose.yml Specification |
+| 9 | Docker port conflict, no data persistence (including a named volume that is referenced but not declared) | Ensure ports do not conflict with system reserved ports; persist data with a volume mount — declare named volumes **both** in the service and under the top-level `volumes:` key, or use a bind mount. A service-level reference alone makes Compose reject the project (`service "x" refers to undefined volume "y"`); run `docker compose config -q` before submitting | Docker only | 9.3 docker-compose.yml Specification |
 | 10 | Deb package runs as root | Create a dedicated non-root user (UID ≥ 1000); specify User/Group in systemd | Deb only | 8.12 Systemd Service Specification |
 | 11 | Script execution fails with `bad interpreter` | Check file line endings; ensure all `.sh` files use LF (not CRLF); use `dos2unix` for batch conversion | All apps | 4.6 Cross-Platform Line Ending Specification |
 | 12 | Dependency not preinstalled; `command not found` | Use Go/Python implementations or bundle static dependencies; do not depend on non-preinstalled environments like Node.js/Java | Deb only | 2.4 System Preinstalled Dependencies |
@@ -201,6 +242,7 @@ Each position provides a clear review opinion (approve/reject with specific reas
 | 16 | Submitted package architecture does not match the `platform` field | Ensure the `platform` in config.ini matches the binary architecture in the package (x86_64 / aarch64) | All apps | 8.4.2 Field Reference |
 | 17 | app.lang has empty name/descript (in some language) | name and descript for all languages must be filled; untranslated languages use English as filler | All apps | 8.5.3 Field Descriptions |
 | 18 | config.ini uses single quotes or contains inline comments | JSON only allows double-quoted strings; remove all `//` or `/* */` comments | All apps | 8.4 config.ini Specification |
+| 19 | App ID starts with the reserved `tos` prefix (`tos-log-server`), so the nginx names derived from it (`nginx/tos-log-server.conf`, the route prefix) collide with the platform's own nginx entries | Choose an App ID that does not start with `tos` (e.g. `dev-log-server`) and rename the nginx configuration file and route prefix accordingly — automated validation does not check this, and it surfaces as "the application page cannot be opened"; the App ID cannot be modified after creation | All apps | 8.4.2 Field Reference / 8.11 Nginx Configuration Specification |
 
 ### 16.6 Rejection Correction Process
 
