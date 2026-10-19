@@ -7,8 +7,9 @@ If serious issues arise after publishing:
 
 1. Submit a rollback request with reason via the Developer Platform
 2. The platform can roll back the app to the previous stable version
-3. Users who installed the problematic version will receive a prompt to upgrade to the rolled-back version
-4. A post-mortem analysis report must be submitted to the Developer Platform
+3. A post-mortem analysis report must be submitted to the Developer Platform
+
+> **No prompt is pushed to users after a rollback.** The system does not notify users who already installed the problematic version. The recommended practice is therefore to **delist the problematic version** (see 17.2), so that the App Center offers the previous version for download; users who already installed the problematic version must reinstall manually.
 
 ### 17.2 App Delisting
 
@@ -34,7 +35,7 @@ If serious issues arise after publishing:
 
 ### 17.3 Ongoing Operations
 
-1. **Version Updates**: Include release notes with each submission. Increasing the version number is recommended — the App Center detects updates by comparing version numbers numerically, so a version that is not greater than the installed one will not reach existing users as an update.
+1. **Version Updates**: Include release notes with each submission. The version number must comply with the 4.2 Version Number Specification and be greater than the previously published version — the App Center detects updates by comparing version numbers numerically, so a version that is not greater than the installed one will not reach existing users as an update.
 2. **Security Patches**: Promptly fix security vulnerabilities and compatibility issues.
 3. **Review Feedback**: Respond to platform rectification notices and complete fixes within the specified timeframe.
 4. **TOS Compatibility**: Continuously adapt to TOS system updates. Test on new TOS versions before user releases.
