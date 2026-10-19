@@ -53,7 +53,7 @@ Recommended app port range: **8000–19999** (excluding ports already occupied b
 | `/Volume*/@apps/<appid>/logs/` | App logs — logical path for the app: `/usr/local/<appid>/logs/` |
 | `/Volume<N>/DockerAppData/<appid>/` | Docker app data (config and business data) |
 | `/usr/local/system_app_data/<appid>/` | System embedded app directory (for built-in apps only) |
-| `/etc/systemd/system/<system_id>.service` | Systemd service file (this path is NOT guaranteed to exist — the platform registers the unit from the application directory; do not hardcode it) |
+| `/usr/local/<appid>/init.d/<system_id>` | Systemd service unit — it must live under the application directory (`/usr/local/<appid>/init.d/`). Placing the unit under `/etc/systemd/system` is **not allowed**; any such path must be removed |
 
 > **Note:** These are the paths your application uses. After installation the platform maps `/usr/local/<appid>/` onto the volume the user chose at installation, where the same directory physically lives at `/Volume<N>/@apps/<appid>/`. `*` is documentation notation for that volume number (e.g., Volume1, Volume2) — the platform does **not** expand it, so never write `/Volume*/…` into a compose file, a systemd unit, a lifecycle script, or any other machine-read configuration.
 > - For non-embedded apps (both official and third-party), all files live in the application directory, which the application sees as `/usr/local/<appid>/`; the platform resolves it onto the user-selected volume at `/Volume<N>/@apps/<appid>/`.
@@ -200,7 +200,7 @@ Use this checklist when upgrading your app to a new major version:
 - [ ] Configuration files are backed up before modification
 - [ ] New dependencies are declared in DEBIAN/control
 - [ ] Service files are updated (if needed)
-- [ ] Version numbers are incremented in config.ini and DEBIAN/control (the platform does not enforce this); if release notes are updated, sync the app.lang entries accordingly
+- [ ] Version numbers are incremented in config.ini and DEBIAN/control; if release notes are updated, sync the app.lang entries accordingly
 - [ ] Changelog/release notes are updated
 - [ ] Upgrade path tested: install old version → add data → upgrade → verify data
 - [ ] Rollback path tested: downgrade or restore from backup
@@ -279,11 +279,14 @@ Complete downloadable config file templates for all app types are available on t
 | Single quotes in JSON | `'version': '1.0.0'` | Use double quotes: `"version": "1.0.0"` |
 | Trailing comma | `"beta": false,}` (comma on last field) | Remove trailing comma after the last field |
 | Hardcoded IP | `"path": "http://192.168.1.100:8080"` | Use placeholder: `"path": "http://${ip}:8080"` |
-| Missing languages | app.lang has only 12 languages | Add all 14 required language sections |
+| Missing languages | app.lang has only 12 languages | Add all language sections required by the target TOS version (14 for TOS 7.0; 26 for TOS 7.1), filling untranslated ones with English |
 | root in systemd | `User=root` in service file | Use dedicated user: `User=<appid>` |
 | Docker privileged mode | `privileged: true` in compose | Remove; use fine-grained capabilities |
 | Missing checksum | No .sha256 file submitted | Run `sha256sum <file> > <file>.sha256` |
-| Version not incremented | v1.0.0 → v1.0.0 (same version) | Not rejected — but the App Center compares versions numerically, so a non-incremented version will not reach existing users as an update; incrementing is recommended (v1.0.0 → v1.0.1) |
+| Version not incremented | v1.0.0 → v1.0.0 (same version) | The version number must be greater than the previously published one; the App Center compares versions numerically, so a non-incremented version would not reach existing users as an update (v1.0.0 → v1.0.1) |
+| App ID or nginx name starts with the reserved `tos` prefix | `"id": "tos-log-server"` (nginx configuration `tos-log-server.conf`, route `location /tos-log-server/`) | Choose an App ID that does not start with `tos` (e.g. `dev-log-server`) and rename the nginx configuration file and route prefix accordingly — `tos` is reserved by the platform in the nginx namespace, so a `tos`-prefixed name collides with the platform's own nginx entries and the application page cannot be opened (FB-20261017-002; see 08 §8.4.2 / §8.11). Automated validation does not check this; it surfaces during functional review as "the app page cannot be opened" |
+
+**Explicitly not a rejection reason:** a missing `proxy_pass` in the nginx portal block (`location /<app_id>/` carrying proxy headers only) must **not** be used to reject, block, or delay a version. This form is compliant when the application ships its own frontend Web panel and its service is reachable through the application socket `/var/api/<app_id>.sock`; adding `proxy_pass http://127.0.0.1:<listen_port>/;` is an optional improvement only (FB-20261017-001; N03 withdrawn — see 08 §8.3.2 / §8.11 / §8.13.2, 16 §16.1 / §16.2, 19 §19.3, 12 §12.10). Backend port allocation checks and nginx configuration syntax validation remain mandatory and are unrelated to this item.
 
 ### Appendix L: Terminology & Definitions
 
@@ -298,6 +301,7 @@ Complete downloadable config file templates for all app types are available on t
 | **Single-Package Mode** | Develop directly according to the TOS 7.0 specification, integrating all files into a single deb package | Single-package mechanism |
 | **WebUI Internal Opening** | App frontend opens within the TOS desktop as an iframe | iframe mode, embedded mode |
 | **WebUI External Opening** | App frontend opens in a new browser tab | New tab mode, external mode |
+| **Reserved `tos` Prefix** | `tos` is reserved by the platform at the beginning of an nginx command / nginx-related name. The App ID (`config.ini.id`) and the nginx names derived from it (`nginx/<appid>.conf`, the route prefix `location /<appid>/`) must not start with `tos` (FB-20261017-002; see 08 §8.4.2 / §8.11) | `tos` prefix collision |
 | **No UI Service** | An app without a graphical interface; a background daemon service | Headless service, daemon |
 | **Minimum TOS Version** | The minimum TOS version required by the app; set in the `low_version` field of `config.ini`. | Min TOS version, TOS version requirement |
 
@@ -307,11 +311,23 @@ Complete downloadable config file templates for all app types are available on t
 |---|---|
 | **Visibility Scope** | Beta apps are only visible to users who have opted into beta testing |
 | **Visibility Control** | Set `"beta": true` in config.ini; the platform automatically restricts visibility |
-| **Graduation Process** | To graduate from Beta: set `"beta": false`. Increasing the version number is recommended so beta users receive the update; avoid a `-beta` / `-rc` suffix, which breaks numeric version comparison |
+| **Graduation Process** | To graduate from Beta: set `"beta": false`. Increase the version number so beta users receive the update; use the `"beta"` field rather than a `-beta` / `-rc` suffix (see 4.2.1) |
 | **Prohibited Behavior** | Beta apps must not be distributed as production releases; misleading users about beta status will result in rejection |
 | **Expiry & Delisting** | Beta apps not updated for 90 days may be automatically delisted |
-| **Version Number** | Version numbers are free-form (the platform does not validate them); use the `"beta": true` field rather than a `-beta` / `-rc` suffix, and keep the number increasing so update detection keeps working |
+| **Version Number** | Version numbers must comply with 4.2 Version Number Specification (Debian character rules, comparable, greater than the previously published version); use the `"beta": true` field rather than a `-beta` / `-rc` suffix, and keep the number increasing so update detection keeps working |
 
+
+### Appendix N: Review Rejection Codes (Tool Check ID) Reference
+
+Rejection notices quote the machine check ID that blocked the submission, in the form `tool-C<number>` (for example `tool-C23`). Use the table below to map a code back to the rule it enforces and to the section that has to be fixed.
+
+| Check ID | Rule enforced | Document Section |
+|---|---|---|
+| `tool-C23` | A Docker application with a UI must set `open_path: true` in `config.ini` (with `path` set to `http://${ip}:<port>`). Leaving the field out makes the application open as an embedded iframe whose page cannot render — "mutually exclusive with `type`" is not the whole rule | 8.4.2 / 9.3 Rule 2 / 16.1 (docker-compose.yml Validation) / 16.2 |
+
+> **Coverage note:** only the check IDs confirmed by developer-side rejection notices are listed above — this guide does not publish the platform's complete check-ID list. If a rejection notice quotes a code that is not in the table, identify the rule from the rejection description using **16.1 (automated validation)**, **16.5 (common rejection reasons)** and **Appendix K (fix examples)**, and report the unmapped code through the Developer Platform support channel so that it can be added here.
+>
+> **Self-check before submission:** the Docker-side checks listed in 16.1 can be reproduced locally with `docker compose config -q` (13.2 Step 2) plus a manual pass over the 16.1 checklists.
 
 *This document is the official global specification for TOS7 app development and publishing. The specification will be continuously updated with TOS7 version iterations. Developers should refer to the latest version on the Developer Platform.*
 
