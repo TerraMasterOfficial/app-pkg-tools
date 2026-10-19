@@ -9,7 +9,10 @@ Review the rejection reason, correct it, and resubmit. Common rejection reasons 
 The total review cycle is usually 5–9 business days (of which manual review is 3–5 business days). Initial submissions may take longer (full manual review of all content); update version reviews are faster (typically 1–3 business days).
 
 **Q: Can the app ID be changed?**  
-It cannot be changed after creation. Please confirm the app ID carefully before publishing.
+It cannot be changed after creation. Please confirm the app ID carefully before publishing — in particular, it must not start with the reserved `tos` prefix (see 8.4.2 / 8.11).
+
+**Q: Can my app ID start with `tos`?**  
+No. `tos` is reserved by the platform in the nginx route/command namespace: an app ID starting with `tos` (for example `tos-log-server`) collides with the platform's own nginx entries and the application page cannot be opened normally; the nginx names derived from the app ID (`nginx/<appid>.conf`, the route prefix) must not start with `tos` either (FB-20261017-002; see 8.4.2 / 8.11). Choose a different app ID before publishing — the app ID cannot be changed after creation.
 
 ### 19.2 Technical Issues
 
@@ -20,8 +23,8 @@ It cannot be changed after creation. Please confirm the app ID carefully before 
 - Different apps use different ports; the platform does not auto-assign ports
 
 **Q: What are the version numbering rules?**  
-- The platform does not enforce any: the version comes from the `version` field in `config.ini`, and non-standard formats, duplicates, and lower version numbers are not rejected
-- **However**, the App Center currently detects updates by comparing version numbers numerically — a version that is not greater than the installed one will not reach existing users as an update
+- The version number must follow 4.2 Version Number Specification: allowed characters, numerically comparable, and greater than the previously published version. It always comes from the `version` field in `config.ini`
+- The App Center detects updates by comparing version numbers numerically, so a version that is not greater than the installed one will not reach existing users as an update
 - Recommended: digits and dots only, increasing over time (e.g. `1.0.0` → `1.0.1`); SemVer `major.minor.patch` is a good default
 - For beta versions, use the `"beta": true` field instead of a `-beta` / `-rc` suffix
 
@@ -49,10 +52,11 @@ Early TOS configuration systems used the `.ini` extension. To maintain backward 
 4. Verify that the frontend correctly includes the `Cookie` and `X-Csrf-Token` headers
 
 **Q: How do I debug WebUI external-opening apps?**  
-1. Check that the backend is listening on `0.0.0.0:<port>` (not 127.0.0.1)
+1. Check that the backend is listening on the port expected by the app's `path` field
 2. Check the nginx configuration file path and syntax: `nginx -t`
 3. Directly access `http://<TNAS_IP>:<port>` to confirm the backend responds correctly
-4. Verify that the proxy_pass port in the nginx location block matches the backend listening port
+4. If the portal block (`location /<app_id>/`) carries `proxy_pass`, verify that its port matches the backend listening port. A portal block that only sets the proxy headers (no `proxy_pass`) is compliant when the application ships its own frontend Web panel and its service is reachable through the application socket `/var/api/<app_id>.sock`; adding `proxy_pass` to the portal block is only an optional improvement and must never be used as a ground for rejection (see 8.3.2 / 8.11; advisory item list: 12 §12.10)
+5. If the app page still cannot be opened, check the App ID and the nginx names derived from it (`nginx/<appid>.conf` and the route prefix): names starting with the reserved `tos` prefix collide with the platform's own nginx entries and must be renamed (FB-20261017-002; see 8.4.2 / 8.11).
 
 ---
 
