@@ -14,7 +14,7 @@ Choose the appropriate type based on application characteristics:
 
 **application_type Value Description:**
 
-`application_type` supports only two values:
+`application_type` supports only two values — **no other value is accepted** (`deb-TarGz` is not a valid application type):
 
 - `"deb"` — Deb application (including single-package mode and dual-package/archive mode)
 - `"docker"` — Docker application
