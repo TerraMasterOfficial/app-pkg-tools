@@ -26,7 +26,7 @@ Follow a consistent directory layout to ensure maintainability and compatibility
 - **Runtime data** (`/usr/local/<appid>/data/`) — Application-generated caches, temporary files, and runtime state. This data can be safely regenerated.
 - **Logs** (`/usr/local/<appid>/logs/`) — Application log files. Ensure log rotation is configured.
 - **User business data** — Persistent business data (documents, media, databases).
-  - **Deb applications**: store it in a shared folder (created via `ter_share_add`) so that users can reach it over SMB/NFS.
+  - **Deb applications** (recommended): store it in a shared folder — created via `ter_share_add` or declared through the `share_folders` field in `config.ini` — so that users can reach it over SMB/NFS. Storing user data under the application's own data directory is **not** currently regulated, but a shared folder is the recommended, user-visible location.
   - **Docker applications**: store it in the application data root `/Volume<N>/DockerAppData/<appid>/` through volume mounts. Docker applications do not use shared folders.
 
 ### 12.2 Data Persistence
@@ -42,10 +42,14 @@ Follow a consistent directory layout to ensure maintainability and compatibility
 **Deb Applications:**
 
 1. **Runtime data** is stored in `/usr/local/<appid>/data/`
-2. **User data** must be stored in a shared folder created by the application:
+2. **User data** is recommended to be stored in a shared folder. Two ways are supported:
    ```bash
-   # In postinst — create a shared folder for user data
+   # In postinst — create a shared folder for user data with the CLI
    ter_share_add -name <appid> -owner <appid>
+   ```
+   ```json
+   // Or declare it in config.ini — the platform creates the folder on installation
+   "share_folders": ["data", "config"]
    ```
 3. To maintain compatibility, the application can create a symbolic link from the shared folder into its own data directory:
    ```bash
@@ -152,9 +156,8 @@ StartLimitBurst=5
 StartLimitIntervalSec=60
 
 [Service]
-Restart=on-failure
-RestartSec=10
 WatchdogSec=30
+# Do not configure Restart= / RestartSec= — the service restart policy is managed by the platform (see 08 §8.7.1 / §8.12).
 ```
 
 **Docker Applications:**
@@ -303,7 +306,7 @@ The exact footprint depends on the application subtype and its service configura
 |---|---|---|---|
 | Before Install | lifecycle script, when provided | Dedicated user and application-owned directories `[Conditional]` | A directory exists only if the platform or a lifecycle script explicitly creates it |
 | Install | App Center / package extraction | `/usr/local/<appid>/` `[Platform]` — the platform resolves it onto the user-selected volume | Deploy static files; mapping is platform-managed |
-| After Install | lifecycle script / App Center | Permissions, service registration, WebUI extraction, shared folders `[Conditional, Deb applications]` | `ter_share_add` is required only when a Deb application needs a user-visible shared folder |
+| After Install | lifecycle script / App Center | Permissions, service registration, WebUI extraction, shared folders `[Conditional, Deb applications]` | Created either via `ter_share_add` or through the `share_folders` field in `config.ini` — required only when a Deb application needs a user-visible shared folder |
 | Start | service start | journal entries `[Platform]`; `/var/api/<appid>.sock` for iframe apps `[Required]`; file logs, `/run/<appid>/`, private temp `[Conditional]` | The application or systemd creates only the paths configured for that service |
 | Running | continuous | `/usr/local/<appid>/data/` and `/usr/local/<appid>/logs/` `[Conditional]`; application-specific state paths `[Conditional]` | Store writable runtime data on the data disk |
 | Stop | service stop | Application-owned socket/PID cleanup; systemd-managed runtime directories `[Conditional]` | Remove stale sockets and PID files before the next start |
@@ -357,7 +360,7 @@ systemd journal                          # storage path is platform-managed; use
 | Service-private `/tmp` | Conditional on `PrivateTmp=true` | systemd | Isolated temporary files | systemd manages the namespace; do not hardcode its host path |
 | systemd journal | Always available to the service | journald | stdout/stderr | Platform-managed; access with `journalctl -u <system_id>` |
 
-> **Service registration:** `systemctl enable` normally creates an enablement link under the selected target (for example, `multi-user.target.wants/`); it does not guarantee `/etc/systemd/system/<system_id>.service`. The platform or lifecycle script must first register the unit from the application directory. Do not hardcode systemd's internal link location as application data.
+> **Service registration:** The service unit must live under the application directory (`/usr/local/<appid>/init.d/`); placing a unit under `/etc/systemd/system` is not allowed. `systemctl enable` creates an enablement link under the selected target (for example, `multi-user.target.wants/`) — do not hardcode that internal link location as application data.
 
 #### 12.9.4 Docker Application Runtime Layout
 
@@ -439,7 +442,7 @@ Before submission, verify:
 - [ ] All static files are declared in the package structure (Section 8.2)
 - [ ] Every runtime path names its creator: platform, lifecycle script, systemd, or application
 - [ ] Lifecycle scripts create only the optional directories the application actually uses and assign the dedicated user
-- [ ] The service unit is registered by the platform or lifecycle script before `systemctl enable/start`; no fixed `/etc/systemd/system/<system_id>.service` path is assumed
+- [ ] The service unit lives under the application directory (`/usr/local/<appid>/init.d/`) and is registered before `systemctl enable/start`; no `/etc/systemd/system` path is assumed
 - [ ] iframe services clean stale `/var/api/<appid>.sock` before binding
 - [ ] `/run/<appid>/` is documented only when `RuntimeDirectory=<appid>` is configured
 - [ ] Service-private `/tmp` is documented only when `PrivateTmp=true` is configured
@@ -451,6 +454,17 @@ Before submission, verify:
 - [ ] Shared folders (`/Volume<N>/<appid>/`, Deb applications) are **never** deleted by scripts; cleanup code checks whether a path is a symlink (e.g., `data/` linked per Section 12.2) before recursive delete
 - [ ] Docker persistent data is mounted through volume mounts (the platform resolves them to `/Volume<N>/DockerAppData/<appid>/`); Docker Engine internal paths are not hardcoded, and the package declares no shared folder
 - [ ] README declares paths, creators, permissions, retention, ports, and shared folders
+- [ ] The App ID does not start with the reserved `tos` prefix, and neither do the nginx names derived from it (`nginx/<appid>.conf` and the route prefix `location /<appid>/`) — a `tos`-prefixed name collides with the platform's own nginx entries and the application cannot be opened (FB-20261017-002; Section 8.4.2 / 8.11)
+
+> **Advisory (not part of this checklist):** adding `proxy_pass` to the nginx portal block is listed as an optional improvement in Section 12.10 — it is not required for submission.
+
+### 12.10 Optional Improvements (Advisory)
+
+Items in this section are **advisory recommendations only**. They are **not** submission requirements, are **not** checked by automatic or manual review, and must **never** be used as a ground to reject, block, or delay a version. Implementing them improves consistency with first-party TOS applications; skipping them is fully acceptable. Mandatory requirements elsewhere in this guide are unaffected — for example the reserved `tos` prefix prohibition (the App ID and the nginx names derived from it must not start with `tos`; 08 §8.4.2 / §8.11, FB-20261017-002) is a **mandatory** naming rule and is deliberately **not** listed here.
+
+| # | Optional improvement | Applies to | Recommendation | Reference |
+|---|---|---|---|---|
+| 1 | Add `proxy_pass http://127.0.0.1:<listen_port>/;` to the nginx portal block | Deb WebUI external-open applications | **Compliant without it.** The portal block `location /<app_id>/` may carry only the proxy headers (`proxy_http_version` / `proxy_set_header`): this is compliant when the application ships its own frontend Web panel and directly provides the app address, and its service is reachable through the application socket `/var/api/<app_id>.sock` (proxied by the platform's sibling block `location ^~ /v2/proxy/<app_id>/`), so the portal block does not have to forward traffic itself. Adding `proxy_pass` makes the portal address resolve to the backend listening port — a **nice-to-have**; a portal block without `proxy_pass` is **not** a defect and must **not** be treated as a rejection reason (FB-20261017-001; N03 withdrawn; the same calibration applies to all comparable applications, e.g. GitBucket / Sonarr) | 08 §8.3.2 / §8.11 / §8.13.2; 16 §16.1 / §16.2; 19 §19.3 |
 
 
 ← [Previous: Package Signing](11_Package_Signing.md) &nbsp;&nbsp;|&nbsp;&nbsp; [Next: Local Testing & Debugging](13_Local_Testing.md) → &nbsp;&nbsp;|&nbsp;&nbsp; [📖 Back to Contents](../README.md)
