@@ -31,7 +31,7 @@ The Docker application is submitted as a `.tar.gz` archive. The archive must con
 | File | Required | Description |
 |------|----------|-------------|
 | `config.ini` | ✅ Yes | Application metadata configuration |
-| `<appid>.lang` | ✅ Yes | Multilingual file (14 languages) |
+| `<appid>.lang` | ✅ Yes | Multilingual file (14 languages required for TOS 7.0; 26 for TOS 7.1; supersets allowed) |
 | `<appid>.svg` | ✅ Yes | Application icon (SVG format) |
 | `docker-compose.yml` | ✅ Yes | Container orchestration configuration |
 
@@ -54,8 +54,10 @@ services:
     restart: unless-stopped
     ports:
       - "<host_port>:<container_port>"
+    volumes:
+      - ./data:/data
     environment:
-      - TZ=Asia/Shanghai
+      - TZ=Asia/Shanghai   # optional — the container reads the host timezone by default
     user: "1000:1000"
 
 x-app-meta:
@@ -65,6 +67,21 @@ x-app-meta:
 ```
 
 > **Note:** Compose files are static configurations with no dynamic parameter matching.
+
+> **Named volumes:** a named volume is *referenced* in the service (`<appid>-data:/data`) but must be *declared* under the top-level `volumes:` key — a service-level reference alone is not enough:
+>
+> ```yaml
+> services:
+>   <appid>:
+>     volumes:
+>       - <appid>-data:/data
+>
+> volumes:
+>   <appid>-data:
+>     driver: local
+> ```
+>
+> ⛔ **A named volume referenced in a service (`name:/container/path`) MUST also be declared under the top-level `volumes:` key. Missing the declaration makes Compose reject the whole project before pulling any image (`service "x" refers to undefined volume "y"`), and App Center installation fails immediately.** Bind mounts (`./data:/data`, `/data:/data`) need no top-level declaration — see Rule 4 below.
 
 **Rules:**
 
@@ -76,8 +93,17 @@ x-app-meta:
        port: 8080
        protocol: http
    ```
-3. **Comments**: You can add comments in the `docker-compose.yml` file. In YAML, comments start with `#` and must be preceded by a space (e.g., `port: 8080 # Web UI port`). Comments may also appear on their own line. 
-4. **Data Persistence**: All data directories must be mounted to host paths. Data stored only inside the container will be lost when the container is removed.
+3. **Comments**: `#` comments are supported in the `docker-compose.yml` file (a comment must be preceded by a space, e.g., `port: 8080 # Web UI port`). However, **comments must not appear inside a `volumes` or `ports` sequence** — keep the items of those sequences contiguous and place any comment above the key or outside the sequence (see the note below the example).
+   ```yaml
+   volumes:
+     - ./config:/config
+     - ./data:/data
+
+   ports:
+     - "8080:8080"
+   ```
+   > **Note (pending R&D reproduction confirmation):** our own testing shows that with no comment inside the `volumes` / `ports` sequence, the owner of the mounted host directory is `1000:0` as expected; with a comment inside the sequence, the platform's compose parsing resolves the host-side bind path incorrectly and the owner becomes `0:0`. Until R&D reproduces and confirms this, treat "no comments inside the `volumes` / `ports` sequence" as the required practice. 
+4. **Data Persistence**: All data directories must be persisted through a volume mount — either a **bind mount** (recommended) or a **named volume**. Data stored only inside the container, with no mount at all, will be lost when the container is removed.
 
    **Host-side volume path syntax (supported forms):** The platform does **not** expand `/Volume*/`. Write the host side of every bind mount in one of the forms below; the data is placed under the application data root `/Volume<N>/DockerAppData/<appid>/`.
 
@@ -86,11 +112,16 @@ x-app-meta:
    | `./data:/data` | Bind Mount | Host relative path | `/Volume1/DockerAppData/<appid>/data` |
    | `/data:/data` | Bind Mount | Host absolute path | `/Volume1/DockerAppData/<appid>/data` |
    | `/Volume1/app/data:/data` | Bind Mount | Host absolute path | `/Volume1/DockerAppData/<appid>/data` |
-   | `app-data:/data` | Named Volume | Docker volume name | — |
-   | `/data` | Anonymous Volume | No source; Docker creates it | — |
-   | `type: tmpfs` | tmpfs | In-memory filesystem | — |
+   | `app-data:/data` | Named Volume | Docker-managed volume; **must also be declared under the top-level `volumes:` key** | Docker-managed: `/var/lib/docker/volumes/<project>_<name>/` — **not** under `/Volume<N>/DockerAppData/<appid>/` |
+   | `/data` | Anonymous Volume | No source; Docker creates it | Docker-managed, not under the application data root; not visible to the user and not cleaned up by "delete data" |
+   | `type: tmpfs` | tmpfs | In-memory filesystem | In memory only — lost when the container is recreated |
 
    ⛔ **Never write `/Volume*/…` in a compose file, a systemd unit, a lifecycle script, or any other machine-read configuration.** The platform does not resolve `*`: the literal directory `/Volume*` is created, and your data is written there instead of the application data root.
+
+   **Bind mount vs named volume — where the data ends up, and whether it can be cleaned up:**
+   - A **bind mount** (`./data:/data`, `/data:/data`, `/Volume1/app/data:/data`) is resolved onto the application data root `/Volume<N>/DockerAppData/<appid>/…`, so the data is visible in the file manager and is removed when the user uninstalls the app and explicitly chooses to delete data (see Section 9.6.4). **This is the recommended form.**
+   - A **named volume** (`<appid>-data:/data`) is supported, but it must be declared under the top-level `volumes:` key (see the note under the §9.3 template), and its data lives in Docker's own volume store (`/var/lib/docker/volumes/<project>_<name>/`) — **not** under `/Volume<N>/DockerAppData/<appid>/`. With the default `clean=false`, uninstalling keeps the volume (`compose down` does not remove volumes by default); with `clean=true`, the platform additionally calls `cleanComposeVolumes` (Section 9.6.4). Either way the data is not under the application data root and is not reachable from the App Center file manager, so **prefer a bind mount** unless the image explicitly requires a named volume.
+   - An **anonymous volume** (`/data`) and **tmpfs** give you no control over the data location either; use them only for disposable data.
 
    **Relative-path base:** in `./data:/data`, the `.` is resolved against the directory that contains the `docker-compose.yml` file — the standard Compose behaviour, where relative host paths are resolved against the Compose project directory. The platform then places the resolved directory under the application data root, so the same compose file works no matter which volume the user picks at installation.
 
@@ -99,8 +130,7 @@ x-app-meta:
    - Recommended range: 8000-19999
    - Verify that the selected port is not in use on the TNAS before submission
 6. **Privileged Mode**: **Strictly prohibited**. The `user` field must be used to specify UID/GID.
-7. **Timezone**: Default configuration `TZ=Asia/Shanghai`. Users may modify as needed.
-    Do not leave the timezone empty — inconsistent timestamps can cause data corruption in time-sensitive applications.
+7. **Timezone**: The container reads the host system timezone — explicitly setting `TZ` is **not required** for Docker applications (`TZ=Asia/Shanghai` in the examples above is illustrative and optional). If you do set a timezone, keep timestamps consistent to avoid data corruption in time-sensitive applications.
 8. **Container Name**: You are free to set a custom name, provided it is globally unique on the Docker daemon. Duplicate names will result in runtime errors.
 9. **Restart Policy**: Use `unless-stopped` for normal services
 10. **Network Mode**: `network_mode: host` is **strictly prohibited**, except for system-level network tools. System-level network tools must clearly state the rationale at submission and may only use it after approval. Regular applications are strictly prohibited. Using host network mode breaks container isolation and poses security risks. Use port mapping instead:
@@ -177,6 +207,8 @@ services:
     restart: unless-stopped
     ports:
       - "8080:8080"
+    volumes:
+      - ./data:/data
     environment:
       - TZ=Asia/Shanghai
       - PUID=1000
