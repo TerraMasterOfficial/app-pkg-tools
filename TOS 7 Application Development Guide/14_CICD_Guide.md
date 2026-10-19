@@ -193,17 +193,22 @@ jobs:
           print('All validations passed!')
           "
 
-      - name: Validate app.lang (14 languages)
+      - name: Validate app.lang (required language coverage — 14 for TOS 7.0, 26 for TOS 7.1)
         run: |
           python3 -c "
-          required_langs = ['zh-cn', 'zh-hk', 'en-us', 'fr-fr', 'de-de', 
-                           'it-it', 'es-es', 'hu-hu', 'ja-jp', 'ko-kr',
-                           'pl-pl', 'ru-ru', 'tr-tr', 'pt-pt']
+          import os
+          langs_tos70 = ['zh-cn', 'zh-hk', 'en-us', 'ko-kr', 'ja-jp', 'de-de',
+                         'fr-fr', 'it-it', 'es-es', 'hu-hu', 'pl-pl', 'tr-tr',
+                         'ru-ru', 'pt-pt']
+          langs_tos71_extra = ['cs-cz', 'da-dk', 'nl-nl', 'nb-no', 'sv-se', 'el-gr',
+                               'ro-ro', 'th-th', 'vi-vn', 'id-id', 'ar-sa', 'he-il']
+          target = os.environ.get('TOS_TARGET_VERSION', '7.0')
+          required_langs = langs_tos70 + (langs_tos71_extra if target == '7.1' else [])
           with open('app.lang', 'r') as f:
               content = f.read()
           for lang in required_langs:
               assert f'[{lang}]' in content, f'Missing language: {lang}'
-          print('All 14 languages present!')
+          print(f'At least {len(required_langs)} required languages present for TOS {target} (supersets allowed).')
           "
 
       - name: Validate icon (SVG format)
