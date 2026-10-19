@@ -1,0 +1,22 @@
+#!/bin/bash
+set -e
+
+APPID="myapp"
+
+# $1 = "remove" | "upgrade" | "deconfigure" | "failed-upgrade"
+case "$1" in
+    remove|deconfigure)
+        # Stop the service when the application is really going away.
+        # The unit itself is owned by the SOURCE package; "disable" is left to
+        # that package's prerm. Never disable here: an unconditional "disable"
+        # would also run on the upgrade path.
+        systemctl stop "${APPID}.service" 2>/dev/null || true
+        ;;
+    upgrade|failed-upgrade)
+        # Do nothing — the service must keep running across the upgrade.
+        ;;
+    *)
+        ;;
+esac
+
+exit 0

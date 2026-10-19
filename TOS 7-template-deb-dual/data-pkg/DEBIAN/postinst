@@ -1,0 +1,16 @@
+#!/bin/bash
+# Post-installation script for the data package.
+# The data package only carries TOS platform configuration and display files
+# (§8.17); the systemd unit belongs to the SOURCE package, so this script must
+# not enable/start/stop the service — that is done by the source package's
+# postinst.
+set -e
+
+APPID="myapp"
+
+# Ensure correct permissions
+chmod 644 "/usr/local/${APPID}/config.ini" 2>/dev/null || true
+chmod 644 "/usr/local/${APPID}/${APPID}.lang" 2>/dev/null || true
+chmod 644 "/usr/local/${APPID}/images/icons/${APPID}.svg" 2>/dev/null || true
+
+exit 0
