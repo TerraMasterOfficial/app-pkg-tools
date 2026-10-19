@@ -265,18 +265,19 @@ For applications where the backend is a local executable service, the frontend i
 **Core Requirements:**
 
 1. `open_path` must be `true`.
-2. The `path` field must correspond to the nginx configuration file route and resolve to the externally provided HTTP interface.
+2. The `path` field must resolve to the externally provided HTTP interface. Deb applications accept **both** forms: the full URL `http://${ip}:<port>` and the route form `/<app_id>/`. The nginx configuration file (see below) maps that address to the application's Unix socket or to its backend listening port.
 3. The application package must include an nginx configuration file `<app_id>.conf`, whose filename must correspond to `config.ini.id`.
 4. The backend directly listens on `<listen_port>` to provide HTTP interfaces.
 5. The deb package must contain an executable program, located at `/usr/local/<app_id>/bin/<binary_name>`.
 6. The `config.ini.package` field specification must strictly conform to the Debian package `package` specification.
 
 **Port Listening Rules:**
-- **Must** listen on `0.0.0.0` (all network interfaces); listening only on `127.0.0.1` is forbidden. Listening only on the loopback address prevents external access.
 - **Must not** occupy system reserved ports (22, 80, 443, 445, 3306, 5050, 5432, 6379, 8181, 8443) — full list: Appendix B of Chapter 20 / §12.8
 - Recommended port range: 8000-19999
 
 **Nginx Configuration File Template:**
+
+The nginx configuration file resolves the access address declared in the `config.ini` `path` field to the application's Unix socket (`/var/api/<app_id>.sock`) or to its backend listening port.
 
 Create at `/usr/local/<app_id>/nginx/<app_id>.conf`:
 
@@ -291,12 +292,19 @@ location /<app_id>/ {
 }
 ```
 
+> **Portal Route and `proxy_pass` Policy:**
+> - **Compliant form — portal block without `proxy_pass`:** the portal block `location /<app_id>/` may contain only `proxy_http_version` and the `proxy_set_header` directives. This is compliant when the application ships its own frontend Web panel and directly provides the application address, and the service is reachable through the application socket (`/var/api/<app_id>.sock`) — the platform's sibling block `location ^~ /v2/proxy/<app_id>/` proxies to `unix:/var/api/<app_id>.sock`, so the portal block itself does not need to forward traffic. In this form the absence of `proxy_pass` is **not** a defect and must not block review.
+> - **Compliant form — portal block with `proxy_pass`:** the template above remains valid; the address declared in the `config.ini` `path` field is resolved to the backend listening port.
+> - **Optional improvement:** adding `proxy_pass http://127.0.0.1:<listen_port>/;` to a portal block that does not need it is an **optional improvement**, not a review requirement, and must never be used as a ground for rejection; it is recorded as an advisory item in **12 §12.10 Optional Improvements (Advisory)**. The same calibration applies to all comparable applications (for example GitBucket and Sonarr).
+> - See 8.11 for the same policy and 16.2 for the corresponding review checklist entry.
+
 **Nginx Configuration Management Requirements:**
 - Configuration file permissions: `644` (owner read/write, group and others read-only)
 - Configuration file must be placed at `/usr/local/<app_id>/nginx/<app_id>.conf`
 - The platform Nginx `include` directive loads configurations in alphabetical order; port conflicts between applications are resolved by using unique ports — two applications cannot share the same port
 - Log rotation: Nginx access/error logs are managed by the platform; do not write your own nginx logs
 - Must not include `server {}` blocks; only use `location /<app_id>/ {}` blocks
+- **Reserved `tos` prefix:** the configuration file name `<app_id>.conf` and the route prefix `location /<app_id>/` are both derived from the App ID and must not start with `tos` — the platform reserves the `tos` prefix in the nginx namespace, so a `tos`-prefixed name collides with the platform's own nginx entries and the application page cannot be opened (FB-20261017-002; see 8.4.2 and 8.11)
 
 #### 8.3.3 No UI Service
 
@@ -473,19 +481,19 @@ Below is the config.ini standard template, divided into three independent exampl
 
 | Field | Type | Required | Description | Detailed Description |
 |---|---|---|---|---|
-| `id` | string | ✅ Yes | Application unique identifier | Globally unique on the platform; must not duplicate any listed application. Character set: lowercase letters (a-z), digits (0-9), and hyphens (-). Must start with a letter. Maximum length: 50 characters. Recommended format: developer-account-identifier-app-business-name or reversed-domain-app-name. Examples: dev-admin-monitor, com-douyin-service. Prohibited pure generic system keywords: docker, bin, var, api, usr, root, admin, system, service, etc. Cannot be modified after creation. |
+| `id` | string | ✅ Yes | Application unique identifier | Globally unique on the platform; must not duplicate any listed application. Character set: lowercase letters (a-z), digits (0-9), and hyphens (-). Must start with a letter. Maximum length: 50 characters. Recommended format: developer-account-identifier-app-business-name or reversed-domain-app-name. Examples: dev-admin-monitor, com-douyin-service. Prohibited pure generic system keywords: docker, bin, var, api, usr, root, admin, system, service, etc. **Reserved prefix — must not start with `tos`:** the platform reserves the `tos` prefix in the nginx route/command namespace, so an `id` such as `tos-log-server` collides with the platform's own nginx entries and the application page cannot be opened normally (FB-20261017-002; see 8.11). Cannot be modified after creation. |
 | `icon` | string | ✅ Yes | Icon path | Relative path within the repository. Must follow the `/images/icons/<id>.svg` format. The icon file must exist at this path. |
 | `publisher` | string | ✅ Yes | Publisher name | The developer or organization name displayed in the App Center. Example: `"Kevin"`, `"LinuxServer.io"`. |
-| `path` | string | Conditionally Required | Application access address | **The `path` field is mutually exclusive by scenario: iframe uses `/<app_id>/`; external open uses `http://${ip}:<port>`; no UI is left empty.** Must use the `${ip}` placeholder (e.g., `http://${ip}:8686`). The system automatically replaces `${ip}` with the TNAS LAN IP. **Hardcoding a fixed IP or domain is prohibited.** Non-80/443 ports: `http://${ip}:<port>`. WebUI Internal Open (iframe): `/<app_id>/`. No UI application: set to `""` or omit this field. Required when `exec=true`. |
+| `path` | string | Conditionally Required | Application access address | **The `path` field is mutually exclusive by scenario: iframe uses `/<app_id>/`; external open uses `http://${ip}:<port>`; no UI is left empty.** For Deb applications **both** forms are accepted: the full URL `http://${ip}:<port>` (e.g., `http://${ip}:8686`) and the route form `/<app_id>/`. Using the `${ip}` placeholder is recommended — the system automatically replaces it with the TNAS LAN IP. **Hardcoding a fixed IP or domain is prohibited.** Non-80/443 ports: `http://${ip}:<port>`. WebUI Internal Open (iframe): `/<app_id>/`. No UI application: set to `""` or omit this field. Required when `exec=true`. The desktop entry opens the resolved access address — for example `http://1.2.3.4/abc/`. |
 | `exec` | bool | ✅ Yes | Whether there is an executable service | Whether the application supports start/stop operations. `true`: App Center displays start/stop buttons; `false`: display only, no lifecycle control. |
-| `open_path` | bool | Conditionally Required | Whether to open in a new tab | Controls how the application is opened: `true` = new browser tab; `false` or omitted = TOS desktop embedded iframe. External open applications must set this to `true`. **Mutually exclusive with `type`; must not be set simultaneously.** |
+| `open_path` | bool | Conditionally Required | Whether to open in a new tab | Controls how the application is opened: `true` = new browser tab; `false` or omitted = TOS desktop embedded iframe. External open applications must set this to `true`; **Docker applications with a UI must also set it to `true`** (with `path` set to `http://${ip}:<port>`) — a Docker package is always shown in a new browser tab, and omitting the field leaves it opening as an embedded iframe whose page cannot render (rejection code `tool-C23`; see 9.3 / 16.1 / Appendix N). **Mutually exclusive with `type`; must not be set simultaneously.** |
 | `type` | string | Conditionally Required | Application open type | Set to `"iframe"` for Deb WebUI Internal Open (iframe embedding). **⚠️ Mutually exclusive with `open_path`; the two must not be set simultaneously.** Deb external-open and Docker applications use `open_path` instead. No UI applications do not set this field. |
 | `resize` | bool | No | Whether the window is resizable | Only effective when `open_path=false`. Controls whether the application popup can be resized. Default `false`. |
 | `maxmin` | bool | No | Whether the window can be maximized/minimized | Only effective when `open_path=false`. Controls whether the application popup supports maximize/minimize. Default `false`. |
 | `width` | int | No | Default window width | Only effective when `open_path=false`. The width of the application page when opened, default 1180. |
 | `height` | int | No | Default window height | Only effective when `open_path=false`. The height of the application page when opened, default 680. |
 | `help` | string | No | Help documentation URL | Link to help documentation, wiki, or community tutorials. Leave empty if none. |
-| `version` | string | ✅ Yes | Application version number, displayed in the App Center | The platform does not enforce a format. A digits-and-dots value that increases with every release (e.g. `"1.0.0"`, `"2.3.1"`) is recommended so the App Center can detect updates — see 4.2 Version Number Specification. |
+| `version` | string | ✅ Yes | Application version number, displayed in the App Center | Must follow the 4.2 Version Number Specification (character rules, numeric comparability, and must be greater than the previously published version) — a specification requirement upheld at manual review: the platform's automated validation does not inspect version numbers at all (agent-api §6.5.6). A digits-and-dots value that increases with every release (e.g. `"1.0.0"`, `"2.3.1"`) also lets the App Center detect updates — see 4.2 Version Number Specification. |
 | `recommend` | bool | ✅ Yes | Whether the application is recommended | `recommend` — Recommendation flag, uniformly set by platform operations after review based on application quality. **Developers must always set this to `false` when submitting.** This field is managed by the platform; developers must not modify it to `true` on their own. |
 | `beta` | bool | ✅ Yes | Whether it is a beta version | `true` = beta version, only shown to test users; `false` = stable version, shown to all users. |
 | `low_version` | string | ✅ Yes | Minimum supported TOS version | Minimum supported TOS system version. Specifies the minimum TOS version on which the application can run normally. This is NOT the application's own version. Recommended: plain numeric version in MAJOR.MINOR or MAJOR.MINOR.PATCH format, e.g. 7.0, 7.1. Must be 7.0 or higher. |
@@ -494,7 +502,7 @@ Below is the config.ini standard template, divided into three independent exampl
 | `relation` | []string | No | Related application list | Application IDs displayed in the "Related Applications" module on the application details page. No mandatory dependency, display association only. No relations: `[]`. |
 | `platform` | string | ✅ Yes | Target architecture | `"x86_64"` or `"aarch64"`. Multi-architecture requires separate submissions. |
 | `official` | string | No | Official website | Link to the application's official website. Leave empty if none. |
-| `application_type` | string | ✅ Yes | Application package type | Deb single-package/dual-package/archive-mode applications: "deb"; Docker applications: "docker". |
+| `application_type` | string | ✅ Yes | Application package type. Only two values are supported: `deb` and `docker` (`deb-TarGz` does not exist and is not accepted) | Deb applications: `"deb"`; Docker applications: `"docker"` |
 | `system_id` | string | Conditionally Required | Systemd service name | **Required for Deb applications.** Must match the systemd service filename. Leave empty for Docker applications. |
 | `package` | string | Conditionally Required | Deb package name | **Required for Deb applications.** Must match the `Package` field in DEBIAN/control. Leave empty for Docker applications. |
 | `compose_project` | string | Conditionally Required | Docker Compose project name | **Required for Docker applications.** Specifies the name used when creating the docker-compose project; must conform to Docker Compose project naming conventions (only lowercase letters, digits, hyphens, and underscores). Leave empty for Deb applications. Example: `"myapp-docker"`.<br>⚠️ **Note:** Although Docker Compose allows underscores, it is recommended that `compose_project` use the same character set as `id` to reduce confusion. `id` only supports lowercase letters, digits, and hyphens (no underscores). If both use the same string, do not use underscores in `compose_project` either. |
@@ -537,13 +545,14 @@ Correct:
 
 **❌ Full-width quotes**: `"version"： "1.0.0"` → **✅ Half-width quotes**: `"version": "1.0.0"`
 
-1. **IP Placeholder**: The `path` field must use `${ip}` (e.g., `http://${ip}:8686`). Hardcoding a fixed IP or domain is prohibited.
+1. **IP Placeholder**: The `path` field may use `${ip}` (e.g., `http://${ip}:8686`); hardcoding a fixed IP or domain is prohibited. Deb applications also accept the route form `/<app_id>/`.
 2. **JSON Syntax**: Must be valid JSON. Comments (`//` or `/* */`), single quotes, or trailing commas are prohibited.
 3. **ID Uniqueness**: `id` must be globally unique. Duplicate IDs will be rejected.
-4. **Version Incrementation**: Increasing the version number on each submission is recommended. The platform no longer rejects duplicate or lower version numbers, but the App Center detects updates by comparing version numbers numerically — a version that is not greater than the installed one will not reach existing users as an update.
+4. **Version Incrementation**: The version number must be greater than every previously published version of the same application, as required by the 4.2 Version Number Specification. The platform's automated validation does not inspect version numbers at all (agent-api §6.5.6) — this rule is a specification requirement upheld at manual review (see 16 §16.1 / §16.2) — while the App Center detects updates by comparing version numbers numerically, so a version that is not greater than the installed one will not reach existing users as an update.
 5. **Category Limit**: Each application may have at most 3 categories.
 6. **TOS Version**: `low_version` must be TOS 7.0 or higher.
-7. **Field Consistency**: `system_id` must match the systemd service filename, and `package` must match the `Package` field in DEBIAN/control. Keeping `version` consistent between config.ini and DEBIAN/control is recommended but not validated by the platform — see 4.2.2.
+7. **Field Consistency**: `system_id` must match the systemd service filename, and `package` must match the `Package` field in DEBIAN/control. Keep the `version` field consistent between config.ini and DEBIAN/control — see 4.2.2.
+8. **Reserved `tos` Prefix**: `id` must not start with `tos`. The platform reserves the `tos` prefix in the nginx route/command namespace — an `id` starting with `tos` (e.g. `tos-log-server`) collides with the platform's own nginx entries, and the application page cannot be opened normally. The same prohibition applies to every nginx-related name derived from the App ID: the configuration file name `nginx/<app_id>.conf`, the route prefix `location /<app_id>/`, and any nginx command named after the App ID (FB-20261017-002; see 8.4.2 and 8.11). Because `id` cannot be modified after creation, fix the name before publishing (see 19 §19.1).
 
 **`path` Field Value Quick Reference Table:**
 
@@ -564,24 +573,54 @@ Correct:
 
 The language file provides multilingual display support for the App Center. The system automatically loads the corresponding language based on the user's device language.
 
-#### 8.5.1 Supported Languages (14 Required)
+#### 8.5.1 Supported Languages
+
+The required language set depends on the target TOS version:
+
+| Target TOS Version | Required Languages |
+|---|---|
+| TOS 7.0 | 14 |
+| TOS 7.1 | 26 |
+
+**The submitted language set must cover at least the required languages of the target TOS version; additional languages (supersets) are allowed.** Review validates against the minimum language count — if any required language node is missing, submission is blocked immediately.
+
+**TOS 7.0 Baseline Languages (14):**
 
 | Tag | Language |
 |---|---|
 | `zh-cn` | Simplified Chinese |
 | `zh-hk` | Traditional Chinese |
 | `en-us` | English |
-| `fr-fr` | French |
+| `ko-kr` | Korean |
+| `ja-jp` | Japanese |
 | `de-de` | German |
+| `fr-fr` | French |
 | `it-it` | Italian |
 | `es-es` | Spanish |
 | `hu-hu` | Hungarian |
-| `ja-jp` | Japanese |
-| `ko-kr` | Korean |
 | `pl-pl` | Polish |
-| `ru-ru` | Russian |
 | `tr-tr` | Turkish |
+| `ru-ru` | Russian |
 | `pt-pt` | Portuguese |
+
+**TOS 7.1 Additional Languages (12):**
+
+| Tag | Language |
+|---|---|
+| `cs-cz` | Czech |
+| `da-dk` | Danish |
+| `nl-nl` | Dutch |
+| `nb-no` | Norwegian |
+| `sv-se` | Swedish |
+| `el-gr` | Greek |
+| `ro-ro` | Romanian |
+| `th-th` | Thai |
+| `vi-vn` | Vietnamese |
+| `id-id` | Indonesian |
+| `ar-sa` | Arabic |
+| `he-il` | Hebrew |
+
+**Required fields:** In every submitted language, `name` / `auth` / `descript` must not be empty; `release_note` / `important` may be empty.
 
 #### 8.5.2 File Format
 
@@ -613,7 +652,7 @@ important = "用户需要注意的重要事项。"
 
 #### 8.5.4 Rules
 
-1. All 14 language nodes must be present. For untranslated languages, fill with English content — **leaving blank is prohibited**.
+1. The submitted language set must cover at least the languages required by the target TOS version (14 for TOS 7.0, 26 for TOS 7.1); additional languages (supersets) are allowed. For untranslated languages, fill with English content — **leaving blank is prohibited**.
 2. File encoding must be **UTF-8 without BOM**.
 3. The `descript` field semantics must be consistent across all languages.
 4. If the application name is a universal language name (not translated), the same value may be used for `name` across all languages. If the application name itself is a proper noun (such as a brand name or product name), the same name may be used across all languages without transliteration or translation.
@@ -625,15 +664,9 @@ important = "用户需要注意的重要事项。"
 - Line endings must be **LF** (Unix style, `\n`). CRLF (Windows style, `\r\n`) will cause parsing errors
 - File naming convention: `<appid>.lang` (e.g., `aria2.lang`)
 
-#### 8.5.6 Text Length Limits
+#### 8.5.6 Text Length
 
-| Field | Maximum Length | Description |
-|---|---|---|
-| `name` | 64 characters | Display name; truncated if exceeded |
-| `auth` | 64 characters | Developer/organization name |
-| `descript` | 512 characters | Feature description |
-| `release_note` | Recommended not exceeding 2048 characters | Multiple lines separated by `</br>` |
-| `important` | 512 characters | Important notices |
+The platform no longer sets a character limit on `name` / `auth` / `descript` / `release_note` / `important`. Text length is determined by how each language renders on the client; the UI truncates the display as needed.
 
 #### 8.5.7 release_note Format
 
@@ -643,7 +676,7 @@ important = "用户需要注意的重要事项。"
 
 #### 8.5.8 Translation Consistency
 
-- The `descript` field semantics must be consistent across all 14 languages
+- The `descript` field semantics must be consistent across all supported languages
 - Reviewers will verify translation accuracy for at least the core languages (zh-cn, en-us). Obvious errors in other languages will require the developer to correct them.
 
 ---
@@ -707,7 +740,7 @@ For systemd-managed services, prefer stdout/stderr for log output — systemd jo
 
 **Service Crash Handling:**
 - When the main service crashes, the application status will be shown as **"Not Enabled"** in the App Center.
-- Developers may configure `Restart=` and `RestartSec=` in the service file according to their application's requirements. The App Center will execute the restart policy according to these developer-defined configurations.
+- **Do not configure `Restart=` / `RestartSec=` in the service file.** The service restart policy is managed by the platform; developer-defined restart settings are not recommended and are discouraged during review.
 - To prevent runaway crash loops, configure `StartLimitBurst=` and `StartLimitIntervalSec=` as needed.
 
 #### 8.7.2 WebUI External Open (HTTP Port Mode)
@@ -957,6 +990,10 @@ location /<app_id>/ {
 }
 ```
 
+> **`proxy_pass` in the portal block is an optional improvement:** the portal block `location /<app_id>/` may contain only `proxy_http_version` and the `proxy_set_header` directives when the application ships its own frontend Web panel and its service is reachable through the application socket `/var/api/<app_id>.sock` (proxied by the sibling block `location ^~ /v2/proxy/<app_id>/`). In that form the portal block does not forward traffic itself, and a missing `proxy_pass` is **not** a defect and must not block review. Adding `proxy_pass http://127.0.0.1:<listen_port>/;` to the portal block is an **optional improvement**, not a review requirement, and must never be used as a ground for rejection; it is recorded as an advisory item in **12 §12.10 Optional Improvements (Advisory)**. Full judgment logic: see 8.3.2; review checklist: see 16.2.
+
+> **Reserved `tos` prefix (mandatory):** the App ID and every nginx-related name derived from it — the configuration file name `nginx/<app_id>.conf`, the route prefix `location /<app_id>/`, and any nginx command or entry named after the App ID — must **not** start with `tos`. `tos` is reserved by the platform in the nginx namespace: per platform engineering confirmation (2026-10-17, issue `TOS-ISSUE-NGINX-PREFIX-COLLISION`), an nginx command starting with `tos` collides with the platform's own nginx entries and the application cannot be opened normally. Fix the name **before** publishing — choose an App ID that does not start with `tos` and rename the corresponding nginx configuration file and route prefix; the App ID cannot be modified after creation (FB-20261017-002; see 8.4.2 and 19 §19.1).
+
 **Example (weather application, port 16688):**
 
 ```nginx
@@ -969,6 +1006,8 @@ location /weather/ {
     proxy_set_header X-Forwarded-Proto $scheme;
 }
 ```
+
+> **Note:** the `proxy_pass` line above is an **optional improvement**. The portal block is compliant with or without it, as long as the application ships its own frontend Web panel and its service is reachable through the application socket (see the policy note above and 8.3.2).
 
 ### 8.12 Systemd Service Specification
 
@@ -1016,8 +1055,7 @@ ProtectSystem=strict
 ProtectHome=true
 ReadWritePaths=/usr/local/<appid>/data /usr/local/<appid>/logs
 LimitNOFILE=65536
-Restart=on-failure
-RestartSec=10
+# Restart= / RestartSec= are managed by the platform; do not configure them.
 
 [Install]
 WantedBy=multi-user.target
@@ -1040,8 +1078,8 @@ WantedBy=multi-user.target
 | `LimitNOFILE` | `65536` | Recommended | File descriptor limit |
 | `StartLimitBurst` | `5` | Optional | Maximum restart attempts within the interval (set according to your needs) |
 | `StartLimitIntervalSec` | `60` | Optional | Restart limit interval in seconds (set according to your needs) |
-| `Restart` | `on-failure` | Optional | When to restart the service (e.g., `always`, `on-failure`, `no`). The App Center executes the restart policy defined here |
-| `RestartSec` | `10` | Optional | Time to wait before restarting the service (seconds) |
+| `Restart` | — | Not recommended | Do not configure — the service restart policy is managed by the platform (see 8.7.1) |
+| `RestartSec` | — | Not recommended | Do not configure — managed by the platform together with `Restart=` (see 8.7.1) |
 
 ### 8.13 DEBIAN/control File
 
@@ -1135,7 +1173,7 @@ Description: Application data package - <App Name>
 | `config.ini.package` | Must match the **data package** metadata `package` |
 | `config.ini.version` | Recommended to match the **data package** metadata `version` (the platform does not validate this) |
 | `config.ini.system_id` | Must match the **source package** systemd service id |
-| `config.ini.path` (when external open) | Must correspond to the nginx configuration file route, resolving to the `<listen_port>` provided by the source package |
+| `config.ini.path` (when external open) | Must correspond to the nginx configuration file route. Where the portal block `location /<app_id>/` carries `proxy_pass`, the route resolves to the `<listen_port>` provided by the source package; where it does not, the address is served by the application's own frontend Web panel through the application socket (see 8.3.2 / 8.11) |
 
 **Data Package Internal File Structure:**
 
@@ -1190,7 +1228,7 @@ Description: Application data package - <App Name>
 set -e
 
 # NOTE: The application user is automatically created by the platform during installation.
-# DO NOT add useradd commands here. The platform ensures the user has non‑root privileges.
+# DO NOT add useradd commands here. The user named in the `user` field of config.ini is created by the platform at install time; the platform ensures it has non‑root privileges.
 
 # Create the application's writable data and log directories
 mkdir -p /usr/local/<appid>/data /usr/local/<appid>/logs
@@ -1261,8 +1299,8 @@ if [ "$1" = "purge" ]; then
     # Remove nginx configuration
     rm -f /etc/nginx/conf.d/<appid>.conf 2>/dev/null || true
     # Remove the service unit from the platform-registered location.
-    # Note: /etc/systemd/system/<system_id>.service is NOT guaranteed to exist —
-    # do not hardcode it; the platform registers the unit from the application directory.
+    # Note: the unit must live under the application directory (/usr/local/<appid>/init.d/)
+    # Place the unit under /usr/local/<appid>/init.d/; do not hardcode /etc/systemd/system paths.
     systemctl disable <system_id>.service 2>/dev/null || true
     # Reload systemd
     systemctl daemon-reload 2>/dev/null || true
@@ -1289,6 +1327,8 @@ exit 0
 - `Warning` (W) level issues should be reviewed; platform-critical warnings must be fixed
 - `Info` (I) level issues are informational, optionally addressed
 - Only use `lintian --suppress-tags=<tag>` for documented, intentional deviations
+- `DEBIAN/md5sums` is no longer a verification item (the legacy requirement of the old TPK format has been cancelled); lintian warnings about a missing `md5sums` are **not** blocking
+- The deb packaging method is not restricted (`dpkg-deb --build` or manual organization are both accepted)
 
 **Dual-Package Archive Structure:**
 The `.tar.gz` archive must have the following structure:
@@ -1532,6 +1572,8 @@ location /weather/ {
     proxy_set_header X-Forwarded-Proto $scheme;
 }
 ```
+
+> **Note:** the `proxy_pass` line above is an **optional improvement**. The portal block is compliant with or without it, as long as the application ships its own frontend Web panel and its service is reachable through the application socket (see 8.3.2 / 8.11).
 
 ---
 
