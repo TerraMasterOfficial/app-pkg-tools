@@ -1,0 +1,42 @@
+#!/bin/bash
+# Post-installation script — runs after the package is installed
+set -e
+
+APPID="myapp"
+APP_DIR="/usr/local/${APPID}"
+
+# Create dedicated user
+if ! id -u "${APPID}" > /dev/null 2>&1; then
+    useradd --system --no-create-home --shell /usr/sbin/nologin "${APPID}" 2>/dev/null || true
+fi
+
+# Set permissions
+chown -R "${APPID}:${APPID}" "${APP_DIR}" 2>/dev/null || true
+chown -R "${APPID}:${APPID}" "/var/lib/${APPID}" 2>/dev/null || true
+
+# Decompress webui.bz2 if present
+if [ -f "${APP_DIR}/webui.bz2" ]; then
+    (cd "${APP_DIR}" && tar -xjf webui.bz2 2>/dev/null) || true
+fi
+
+# $1 = "configure" (also on upgrade), $2 = the version that was installed before
+case "$1" in
+    configure)
+        if [ -n "$2" ]; then
+            # Upgrade path: $2 holds the old version — do the data migration
+            # required by §4.3 here (never delete user data on upgrade).
+            echo "${APPID}: upgrading from version $2 ..."
+        fi
+        # Enable and start the service. This is idempotent, and it is done on
+        # BOTH the fresh-install and the upgrade path, so an upgrade never
+        # leaves the service disabled / stopped.
+        systemctl daemon-reload 2>/dev/null || true
+        systemctl enable "${APPID}.service" 2>/dev/null || true
+        systemctl start "${APPID}.service" 2>/dev/null || true
+        ;;
+    *)
+        ;;
+esac
+
+echo "${APPID} installed successfully."
+exit 0

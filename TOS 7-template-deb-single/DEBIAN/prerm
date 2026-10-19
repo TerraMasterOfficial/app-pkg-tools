@@ -1,0 +1,27 @@
+#!/bin/bash
+# Pre-removal script — runs before the package is removed
+set -e
+
+APPID="myapp"
+
+# $1 = "remove" | "upgrade" | "deconfigure" | "failed-upgrade"
+case "$1" in
+    remove|deconfigure)
+        # Kill remaining user processes
+        pkill -u "${APPID}" 2>/dev/null || true
+        sleep 1
+
+        # Stop and disable the service ONLY when the package is really going away.
+        # An unconditional "disable" on the upgrade path is what makes the
+        # service stop auto-starting after an upgrade.
+        systemctl stop "${APPID}.service" 2>/dev/null || true
+        systemctl disable "${APPID}.service" 2>/dev/null || true
+        ;;
+    upgrade|failed-upgrade)
+        # Do nothing: the new version's postinst re-enables and starts the service.
+        ;;
+    *)
+        ;;
+esac
+
+exit 0

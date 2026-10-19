@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="64" fill="#4A90D9"/>
+  <text x="256" y="280" font-family="Arial,sans-serif" font-size="120" font-weight="bold" fill="white" text-anchor="middle">APP</text>
+  <text x="256" y="360" font-family="Arial,sans-serif" font-size="48" fill="rgba(255,255,255,0.7)" text-anchor="middle">Replace Me</text>
+</svg>

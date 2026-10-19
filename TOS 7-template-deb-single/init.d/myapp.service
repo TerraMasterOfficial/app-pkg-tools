@@ -1,0 +1,40 @@
+[Unit]
+Description=My Application Service
+After=network.target
+StartLimitBurst=5
+StartLimitIntervalSec=60
+
+[Service]
+Type=simple
+User=myapp
+Group=myapp
+WorkingDirectory=/usr/local/myapp
+ExecStart=/usr/local/myapp/bin/myapp
+EnvironmentFile=/usr/local/myapp/myapp.env
+TimeoutStartSec=30
+TimeoutStopSec=10
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictRealtime=true
+MemoryDenyWriteExecute=true
+LockPersonality=true
+RestrictSUIDSGID=true
+RemoveIPC=true
+SystemCallArchitectures=native
+
+# Read-write paths
+ReadWritePaths=/usr/local/myapp /var/lib/myapp /var/log/myapp
+
+# Resource limits
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
