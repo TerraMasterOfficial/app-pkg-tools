@@ -84,21 +84,21 @@
 2. Click [Add Version]. The platform calls the repository interface and returns **all installable packages found in the Releases** of the repository URL configured for the application
 3. Select the Release (tag) and the package file you want to submit
    - Do **not** enter a version number manually — it is read from the `version` field inside the selected package
-   - Reusing or lowering a version number is no longer rejected, but the App Center detects updates by comparing versions numerically — a version that is not greater than the installed one will not reach existing users as an update
+   - Reusing or lowering a version number is not blocked by automated validation (the platform never inspects version numbers — agent-api §6.5.6), but the 4.2 version rules still apply and are upheld at manual review. The App Center detects updates by comparing versions numerically — a version that is not greater than the installed one will not reach existing users as an update
    - The Release and its assets must remain available, because the platform downloads the package from the selected Release at review time
 4. After submitting the version, the publishing application process begins
 
 > **Version source and consistency:**
 > The version comes from the package itself, always from the `version` field in `config.ini`. There is no manually entered version number, and the Release tag is not required to match the version.
 >
-> The platform does **not** validate the version — not its format, not incrementation, and not whether it matches `DEBIAN/control`. Note however that the App Center detects updates by comparing version numbers numerically, so a version that is not greater than the installed one will not be offered to existing users as an update.
+> The version must follow the 4.2 Version Number Specification (character rules, comparability, and must be greater than the previously published version). It must also match `DEBIAN/control` (see 4.2.2). The App Center detects updates by comparing version numbers numerically, so a version that is not greater than the installed one will not be offered to existing users as an update.
 
 #### Step 6: Platform Automated Validation
 
 After submission, the platform automatically performs the following checks:
 - File format validation (config.ini JSON syntax, app.lang format)
 - Field completeness validation (no missing required fields)
-- Language coverage validation (all 14 language nodes present)
+- Language coverage validation (the language set required by the target TOS version — 14 for TOS 7.0, 26 for TOS 7.1; supersets allowed)
 - Icon validation (SVG format, path matching)
 - Checksum verification (SHA-256 matches uploaded files)
 - Package type validation (the selected package's format matches the declared Deb / Docker application type)
