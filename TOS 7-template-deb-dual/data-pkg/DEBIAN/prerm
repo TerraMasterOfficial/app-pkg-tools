@@ -1,9 +1,0 @@
-#!/bin/bash
-set -e
-
-APPID="myapp"
-
-systemctl stop "${APPID}.service" 2>/dev/null || true
-systemctl disable "${APPID}.service" 2>/dev/null || true
-
-exit 0
