@@ -50,24 +50,42 @@ TOS 7 applications follow a clearly defined lifecycle:
 
 #### 4.2.1 Version Number Rules
 
-> **Platform behaviour (current):** The Developer Platform **does not validate the version number**. Non-standard formats, duplicate versions, and version numbers that do not increase are **not rejected**. The platform simply reads the `version` field from `config.ini` and displays it in the App Center. The rules below are therefore **recommendations for compatibility**, not submission requirements.
+> **Requirement:** The version number must follow the character and format rules below, must be numerically comparable, and must be greater than the previously published version of the same application. A version number that does not comply cannot be delivered to existing users as an update.
 
-**Why the format still matters — update detection:**
+**Why the format matters — update detection:**
 
-The TOS App Center currently determines whether an update is available by **comparing version numbers numerically, segment by segment**. This is a functional dependency rather than a submission rule:
+The TOS App Center determines whether an update is available by **comparing version numbers numerically, segment by segment**:
 
-- If the new version is **numerically greater** than the installed one, users see the update prompt.
-- If it is **not greater** (equal, lower, or not numerically comparable such as `v2` or `1.0.0-rc1`), the update may **not be detected** — the package is still accepted, but it may never reach existing users.
+- If the new version is **numerically greater** than the installed one, users see the update prompt for the app.
+- If it is **not greater** (equal, lower, or not numerically comparable such as `v2` or `1.0.0-rc1`), no update prompt is generated and the new version never reaches existing users — even though the package itself is accepted.
 
-**Recommended format:**
+**Character rules (Debian version syntax):**
+
+| Character | Supported | Description |
+| :--- | :--- | :--- |
+| `0-9` | Yes | Digits |
+| `a-z` `A-Z` | Yes | Letters |
+| `.` | Yes | Version segment separator |
+| `+` | Yes | Commonly used for `<upstream>+build1` / `+dfsg` |
+| `~` | Yes | Marks a pre-release version; sorts lower than other characters |
+| `-` | Conditional | Separates the Debian revision; may also appear in the upstream version, but the format rules must be respected |
+| `:` | Conditional | Separates the epoch; normally allowed only at the beginning of the version number |
+| `_` | No | Not allowed in a standard Debian version number |
+| space | No | A version number cannot contain spaces |
+| `/` `\\` | No | Not allowed |
+| `@` `#` `$` `%` | No | Not allowed |
+| `!` `?` `*` | No | Not allowed |
+
+**Additional rules:**
 
 | Rule | Description |
 | :--- | :--- |
-| **Characters** | Digits (`0-9`) and dots (`.`) are recommended. Letters and hyphens (e.g. `v1.2`, `1.2.3-beta`) cannot be compared numerically and may break update detection |
+| **Comparability** | Version numbers submitted for the same application must be comparable with each other |
+| **Incrementation** | A new version number must be greater than all previously published version numbers |
 | **Segments** | 1 to 3 numeric segments (e.g., `1`, `1.2`, `1.2.3`) |
 | **Segment length** | No per-segment length limit; each segment can contain any number of digits |
-| **Total length** | No length limit is enforced. Keeping the version string short (the previous limit was 20 characters) is still recommended |
-| **Beta versions** | Use the `"beta": true` field in `config.ini` to mark beta releases. Suffixes such as `-beta` / `-rc` / `-alpha` are not rejected, but they break numeric comparison |
+| **Total length** | Keep the version string short (the previous limit was 20 characters) |
+| **Beta versions** | Use the `"beta": true` field in `config.ini` rather than a `-beta` / `-rc` suffix, so beta builds are still recognised as new versions by beta users |
 
 **Comparison Rules (Version Ordering):**
 
@@ -101,14 +119,14 @@ Versions are compared **segment-by-segment as numbers**, from left to right:
 
 #### 4.2.2 Version Consistency Across Files
 
-The platform **does not** compare the version numbers inside a package against each other, and it does not require them to match. The version is read from `config.ini`.
+The version is always read from `config.ini`; the two packages' version numbers should be kept consistent (see 4.2.1).
 
 | Location | Field | Read by |
 | :--- | :--- | :--- |
 | `config.ini` | `version` | The Developer Platform and the TOS App Center — this is the version **displayed to users** |
 | `DEBIAN/control` (Deb apps only) | `Version` | The Debian package manager (`dpkg`) — this is the version **recorded by the system** |
 
-> **Still recommended: keep them consistent.** A mismatch causes no rejection, but it does cause a confusing installation — users would see one version in the App Center while `dpkg -l` reports another, which complicates upgrades and support.
+> **Keep them consistent.** A mismatch causes a confusing installation — users would see one version in the App Center while `dpkg -l` reports another, which complicates upgrades and support.
 >
 > **Keep `DEBIAN/control` `Version` non-decreasing.** At the `dpkg` level, installing a package whose `Version` is lower than the installed one is refused (downgrade protection). This is package-manager behaviour and is independent of the Developer Platform.
 >
@@ -126,7 +144,7 @@ Beta status is controlled by the `beta` flag in `config.ini`, not by the version
 
 **Beta Management Notes:**
 
-- Version suffixes such as `-beta`, `-rc`, or `-alpha` are **not rejected**, but they break numeric comparison. Use the `"beta": true` field instead so beta builds are still recognised as new versions by beta users.
+- Version suffixes such as `-beta`, `-rc`, or `-alpha` use the `-` character, which is only conditionally supported (see 4.2.1). Use the `"beta": true` field instead so beta builds are still recognised as new versions by beta users.
 - Multiple beta versions are distinguished by increasing the numeric part (recommended: increment the patch segment).
 - When promoting a beta to stable, set `"beta": false`. The version number can remain unchanged; if you do increase it, beta users are also offered the update.
 - A stable release whose version number is lower than a previously submitted beta build will not be offered to users still on that beta build as an update.
@@ -166,7 +184,7 @@ When uploading application packages to GitHub/Gitee Releases, name the package f
 - `postinst` receives `$1 = "configure"` parameter, with `$2` being the old version number
 - Use `$2` to detect the old version and perform data migration
 - Never delete user data during the upgrade process; only modify configuration formats or migrate data structures
-- Users store persistent business data in the `/Volume<N>/<appid>/` shared folder, which is created by the application via `ter_share_add`. The platform will not delete or overwrite user data in this shared folder during application upgrades or reinstallation
+- Users store persistent business data in the `/Volume<N>/<appid>/` shared folder. The application creates it either via `ter_share_add` or by declaring `share_folders` in `config.ini` (recommended). The platform will not delete or overwrite user data in this shared folder during application upgrades or reinstallation
 - Runtime data (caches, temporary files) is stored in `/usr/local/<appid>/data/` and can be safely regenerated
 - It is recommended not to store data in system common directories such as `/etc`, `/var`, `/usr/bin`, as these directories may be overwritten by system updates or application upgrades, leading to data loss
 
@@ -223,7 +241,7 @@ TOS employs a root filesystem compatible with Ubuntu Linux, and the filesystem i
 | Filenames | Strictly match case. `config.ini` ≠ `Config.ini` ≠ `CONFIG.INI` |
 | Directory names | Strictly match case. `/images/icons/` ≠ `/Images/Icons/` |
 | config.ini key names | All key names must be lowercase. `"version"` correct, `"Version"` incorrect |
-| Application ID (`id`) | Strictly match case. `MyApp` ≠ `myapp`. Cannot be modified after creation |
+| Application ID (`id`) | Strictly match case. `MyApp` ≠ `myapp`. Must not start with the reserved `tos` prefix (see 08 §8.4.2 / §8.11, FB-20261017-002). Cannot be modified after creation |
 | Systemd service name | Must strictly match, case-sensitive |
 
 
@@ -300,7 +318,7 @@ An application's footprint is divided into three categories that are treated dif
 | `/var/lib/<appid>/`, `/var/log/<appid>/` | Legacy compatibility paths; **not required**. The documented location for application state and logs is `/usr/local/<appid>/data` and `/usr/local/<appid>/logs` | App-specific state or logs | Delete only when package-owned and documented |
 | `/run/<appid>/` | Only with `RuntimeDirectory=<appid>` | PID files and runtime sockets | systemd-managed |
 | Service-private `/tmp` | Only with `PrivateTmp=true` | Isolated temporary files | systemd-managed; physical host path is internal |
-| systemd enablement links | Platform/lifecycle script | Service boot registration | Platform/package-managed; do not assume a fixed `/etc/systemd/system/<id>.service` path |
+| systemd enablement links | Platform/lifecycle script | Service boot registration | The unit must be placed under the application directory (`/usr/local/<appid>/init.d/`); `/etc/systemd/system` paths are not allowed |
 | `/Volume<N>/DockerAppData/<appid>/` | Docker apps | Persistent config & data volumes | Kept unless user chooses to remove volumes |
 
 **Key rules:**
