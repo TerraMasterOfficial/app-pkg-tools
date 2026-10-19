@@ -38,6 +38,24 @@ The platform provides a structured permission model for both Deb and Docker appl
 |---|---|---|
 | Non-root | `UID:GID` (e.g., `1000:1000`) | **Must be used.** Specified via the `user` field in compose. |
 
+#### 10.3.1 Docker Applications — `user` in config.ini vs `user` in docker-compose.yml
+
+A Docker application declares a `user` value twice, and the two are **different layers** — do not conflate them:
+
+| Layer | Field | Meaning |
+|---|---|---|
+| Application metadata | `config.ini` → `user` | The **TOS system user name** that the platform creates for the application at install time. It is a platform account, not a container account. |
+| Container runtime | `docker-compose.yml` → `services.<svc>.user` | The **UID:GID inside the container** that the service process actually runs as. This is the value that decides whether the mounted data directories are writable. |
+
+Practical rules:
+
+1. The two values are independent: setting one does not set the other, and they are not required to be textually identical (one is a name, the other a numeric pair). A difference between them is not a rejection ground by itself — but it does decide whether the container can write to its data directory.
+2. The platform resolves the container user at install time and runs `chown` on the host-side mounted directories under the application data root (Section 9.6.1, *Pull Images* stage). The safe practice is therefore to make the compose `user` UID:GID match the UID:GID the platform assigns to the application — for third-party Docker applications this is normally `1000:1000`.
+3. **Images that do not support `PUID`/`PGID`** (some images hard-code their runtime user, e.g. `rustfs` / UID 10001, and ignore those environment variables): set `services.<svc>.user` to that image's own UID:GID (e.g. `"10001:10001"`) instead of relying on `PUID`/`PGID`, so that the container user and the owner of the mounted directory agree. The application should write only inside its mounted data directories.
+4. If a mounted directory is still not writable at runtime, the cause is almost always a UID mismatch: compare the owner shown by `ls -lan /Volume<N>/DockerAppData/<appid>/…` with the UID reported by `docker exec <appid> id`.
+
+> **Pending platform confirmation:** whether the platform starts the compose project *as* the `config.ini` system user, and the exact ownership rules it applies to the directories it pre-creates, are platform behaviours this guide does not yet state. Rules 2–4 above describe the safe practice to follow until the platform team confirms the exact mechanism.
+
 ### 10.4 File System Permissions
 
 **Standard Directory Permissions for Deb Applications:**
@@ -58,7 +76,7 @@ The platform provides a structured permission model for both Deb and Docker appl
 > **Note 3: Data Types**
 > - **Runtime data** (`/usr/local/<appid>/data/`) — Application-generated caches, temporary files, and runtime state. This data is managed by the application and can be safely regenerated.
 > - **User data** — Persistent business data (documents, photos, databases).
->   - **Deb applications**: store it in a shared folder created via `ter_share_add`, so that users can reach it over SMB/NFS.
+>   - **Deb applications**: a shared folder is the recommended location for user-visible data — create it via `ter_share_add`, or declare it through the `share_folders` field in `config.ini`; a field-created folder appears automatically in the TNAS file manager and is reachable over SMB/NFS. Storing user data under the application's own data directory is not currently regulated.
 >   - **Docker applications**: do **not** use shared folders. Their persistent business data lives in the container's volume mounts, which the platform resolves to `/Volume<N>/DockerAppData/<appid>/` (see Section 10.6).
 
 ### 10.5 Network Permissions
@@ -75,9 +93,13 @@ The platform provides a structured permission model for both Deb and Docker appl
 
 TNAS shared folders are the primary data access mechanism for Deb applications. Applications requiring access to user data must:
 
-1. **Create a shared folder** via `ter_share_add`:
+1. **Create a shared folder** — either via `ter_share_add`:
 ```bash
 ter_share_add -name <appid>-data -owner <appid>
+```
+or by declaring it in `config.ini` (the platform creates the folder during installation, and it appears in the TNAS file manager):
+```json
+"share_folders": ["data", "config"]
 ```
 
 2. **Or request access to existing shared folders** by joining the `allusers` group:
