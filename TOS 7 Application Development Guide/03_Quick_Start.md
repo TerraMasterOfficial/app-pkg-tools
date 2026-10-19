@@ -74,10 +74,10 @@ curl http://localhost:<port>/health
 Before submitting to the review platform, verify the following items:
 
 - [ ] `config.ini` is valid JSON format (no comments, no trailing commas, double quotes only)
-- [ ] `app.lang` includes all 14 languages (untranslated languages filled with English)
+- [ ] `app.lang` includes at least the languages required by the target TOS version (14 for TOS 7.0, 26 for TOS 7.1; supersets are allowed); `name` / `auth` / `descript` are non-empty in every submitted language — blank strings and punctuation-only placeholders are not accepted, while filling an untranslated language with the English text is acceptable
 - [ ] Icon is in SVG format, stored at `/images/icons/<appid>.svg`
 - [ ] systemd service file `User` is not `root`
-- [ ] Version number increases numerically and is consistent across `config.ini` and `DEBIAN/control` (recommended — the platform does not validate this, but the App Center detects updates by comparing versions)
+- [ ] Version number complies with 4.2 (allowed characters, numerically comparable) and increases numerically, and is consistent across `config.ini` and `DEBIAN/control`
 - [ ] Full install/start/stop/uninstall workflow tested on a real TNAS device or alternative testing environment (see [Chapter 6 · Development Environment](06_Development_Environment.md#68-testing-environment-options))
 
 > 💡 **No TNAS hardware?** No problem. You can develop and test TOS applications without owning a physical TNAS device. As long as your development environment meets the recommended setup (see [Chapter 6 · Development Environment](06_Development_Environment.md#68-testing-environment-options)), alternatives such as Ubuntu 22.04 VM or a remote testing device work just as well.
