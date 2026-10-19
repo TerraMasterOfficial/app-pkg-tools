@@ -77,34 +77,42 @@ sudo dpkg -i <appid>_1.0.0_x86_64.deb   # Upgrade to new version
 # Docker Engine is available in the TOS App Center — users will be prompted to install it if not already present.
 sudo systemctl status docker
 
-# 2. Start the application
+# 2. Static validation FIRST: catches undefined named volumes, syntax errors, etc.
+#    Fix every error before starting the containers. A named volume that appears
+#    only under the service (not declared under the top-level `volumes:` key)
+#    makes Compose reject the whole project before pulling any image
+#    (`service "x" refers to undefined volume "y"`); that error comes from
+#    Compose, not from TOS, so it is easy to misread as a platform problem.
+docker compose -f docker-compose.yml config -q
+
+# 3. Start the application
 docker-compose -f docker-compose.yml up -d
 
-# 3. Check container status
+# 4. Check container status
 docker ps | grep <appid>
 
-# 4. View container logs (real-time)
+# 5. View container logs (real-time)
 docker logs -f <appid>
 
-# 5. Check resource usage
+# 6. Check resource usage
 docker stats <appid>
 
-# 6. Check if the Web UI is accessible
+# 7. Check if the Web UI is accessible
 curl http://localhost:<port>
 
-# 7. Test stop/restart
+# 8. Test stop/restart
 docker-compose -f docker-compose.yml down
 docker-compose -f docker-compose.yml up -d
 
-# 8. Test data persistence
+# 9. Test data persistence
 docker-compose -f docker-compose.yml down
 docker-compose -f docker-compose.yml up -d
 # Verify data still exists in /Volume*/DockerAppData/<appid>/ (Docker applications do not use TNAS shared folders)
 
-# 9. Test health check
+# 10. Test health check
 docker inspect --format='{{.State.Health.Status}}' <appid>
 
-# 10. Cleanup
+# 11. Cleanup
 docker-compose -f docker-compose.yml down -v
 ```
 
@@ -161,7 +169,7 @@ echo "=== Debug Complete ==="
 **Service Debugging**
 
 ```bash
-# Verify service file validity (path is resolved from the platform-registered unit; do not hardcode /etc/systemd/system/<system_id>.service)
+# Verify service unit validity (the unit must live under /usr/local/<appid>/init.d/; /etc/systemd/system paths are not allowed)
 systemctl cat "$APPID" >/dev/null 2>&1 || echo "Unit not found (platform may register it from the application directory)"
 
 # Check service dependencies
@@ -232,7 +240,7 @@ docker logs -f <appid> &     # Docker
 | Service fails to start | Missing dependencies or incorrect path | Check `journalctl -u <system_id>`, verify `ExecStart` path |
 | Port conflict | Another service using the same port | `ss -tlnp \| grep <port>`, switch to an available port |
 | Permission denied | Incorrect file ownership or permissions | Verify `User`/`Group` in service file, check file ownership |
-| Web UI inaccessible | Service not listening or firewall blocking | Check if service is running, verify port binding (`0.0.0.0` not `127.0.0.1`) |
+| Web UI inaccessible | Service not listening or firewall blocking | Check if service is running, and verify that the service is listening on the port expected by the app's `path` field |
 | Container exits immediately | Application error inside container | `docker logs <appid>`, check entrypoint/command |
 | Data lost after restart | Volume mount not configured | Add volume mapping in docker-compose.yml |
 | App broken after TOS update | ABI change or service conflict | Check `low_version`, test on new TOS version |
@@ -240,7 +248,7 @@ docker logs -f <appid> &     # Docker
 | Config permissions lost after upgrade | chown/chmod not re-applied in postinst | Add `chown -R <appid>:<appid>` in postinst script |
 | Socket file residue causing startup failure | Socket not cleaned up from previous run | Add `rm -f /var/api/<appid>.sock` before starting service |
 | Nginx reload failure | Invalid Nginx config syntax | Validate with `nginx -t` before reloading |
-| Incorrect Docker volume permissions | Host vs container UID/GID mismatch | Use `PUID`/`PGID` environment variables matching host user |
+| Incorrect Docker volume permissions | Host vs container UID/GID mismatch | Use `PUID`/`PGID` environment variables matching the host user; if the image does not support `PUID`/`PGID` (some images hard-code their runtime user), set the compose `user` field to that image's own UID:GID instead (see 10.3.1) |
 | Service starts before network is ready | systemd unit missing `After=network.target` | Add `After=network.target` and `Wants=network.target` |
 | Deb fails to install due to unmet dependencies | Missing Depends in DEBIAN/control | Missing system library dependency → add corresponding package name in `Depends` (DEBIAN/control); missing other app dependency → add in config.ini `depend` field |
 
