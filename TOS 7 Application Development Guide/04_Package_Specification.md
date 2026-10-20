@@ -224,12 +224,12 @@ esac
 
 > **Note:** Node.js versions are for reference within Docker containers only. Deb applications must not directly depend on them.
 
-> **Important:** Applications must declare the minimum TOS version requirement via the `low_version` field in config.ini. The platform will automatically filter out incompatible devices.
+> **Important:** The `low_version` field in config.ini is **optional**. It declares the minimum TOS version requirement of the application; when it is provided, the platform automatically filters out incompatible devices. Leaving it empty is allowed and does not block submission — the release then declares no minimum TOS version and no version-based device filtering is applied to it. Since the 20261019 revision, `help` is a required config.ini field instead.
 
 > **TOS 7.x Minor Version Compatibility:** The TOS 7.x minor version series (including 7.1 and above) will maintain ABI/API compatibility for core dependencies (glibc/Python3/Docker/Node.js), compatible with the Ubuntu 22.04-compatible root filesystem. Applications developed for TOS 7.0 will run without additional adaptation.
 
 **TOS 7 Minor Version Compatibility:**
-- The `low_version` field must specify the minimum required TOS version
+- The optional `low_version` field, when provided, must specify the minimum required TOS version
 - When submitting updates, test on the latest TOS 7 minor version
 
 ### 4.5 Case Sensitivity Specification
