@@ -492,11 +492,11 @@ Below is the config.ini standard template, divided into three independent exampl
 | `maxmin` | bool | No | Whether the window can be maximized/minimized | Only effective when `open_path=false`. Controls whether the application popup supports maximize/minimize. Default `false`. |
 | `width` | int | No | Default window width | Only effective when `open_path=false`. The width of the application page when opened, default 1180. |
 | `height` | int | No | Default window height | Only effective when `open_path=false`. The height of the application page when opened, default 680. |
-| `help` | string | No | Help documentation URL | Link to help documentation, wiki, or community tutorials. Leave empty if none. |
+| `help` | string | ✅ Yes | Help documentation URL | Help documentation, wiki, or community tutorial link of the application. **Required:** every submission must provide the help/documentation address of the application. |
 | `version` | string | ✅ Yes | Application version number, displayed in the App Center | Must follow the 4.2 Version Number Specification (character rules, numeric comparability, and must be greater than the previously published version) — a specification requirement upheld at manual review: the platform's automated validation does not inspect version numbers at all (agent-api §6.5.6). A digits-and-dots value that increases with every release (e.g. `"1.0.0"`, `"2.3.1"`) also lets the App Center detect updates — see 4.2 Version Number Specification. |
 | `recommend` | bool | ✅ Yes | Whether the application is recommended | `recommend` — Recommendation flag, uniformly set by platform operations after review based on application quality. **Developers must always set this to `false` when submitting.** This field is managed by the platform; developers must not modify it to `true` on their own. |
 | `beta` | bool | ✅ Yes | Whether it is a beta version | `true` = beta version, only shown to test users; `false` = stable version, shown to all users. |
-| `low_version` | string | ✅ Yes | Minimum supported TOS version | Minimum supported TOS system version. Specifies the minimum TOS version on which the application can run normally. This is NOT the application's own version. Recommended: plain numeric version in MAJOR.MINOR or MAJOR.MINOR.PATCH format, e.g. 7.0, 7.1. Must be 7.0 or higher. |
+| `low_version` | string | No | Minimum supported TOS version | Minimum supported TOS system version. Specifies the minimum TOS version on which the application can run normally. This is NOT the application's own version. **Optional (since the 20261019 revision):** leaving it empty is allowed and does not block submission — the release then declares no minimum TOS version, and the platform applies no version-based device filtering to it. When provided, use a plain numeric version in MAJOR.MINOR or MAJOR.MINOR.PATCH format (e.g. 7.0, 7.1) and it must be 7.0 or higher. |
 | `category` | []string | ✅ Yes | Application categories | Up to 3 categories, selected from the official category list (see [Appendix A](20_Appendix.md#appendix-a-application-categories)). **The first category is the primary category** — it determines the default display section of the application. Arrange from most specific to most general. Exceeding the category limit results in rejection. |
 | `depend` | []string | No | Dependency application list | Application IDs that must be installed before this application. Must be existing App Center application IDs. Dependencies are installed in list order. Example: `["DockerEngine"]`. No dependencies: `[]`. **Circular dependencies will be rejected.** |
 | `relation` | []string | No | Related application list | Application IDs displayed in the "Related Applications" module on the application details page. No mandatory dependency, display association only. No relations: `[]`. |
@@ -550,9 +550,10 @@ Correct:
 3. **ID Uniqueness**: `id` must be globally unique. Duplicate IDs will be rejected.
 4. **Version Incrementation**: The version number must be greater than every previously published version of the same application, as required by the 4.2 Version Number Specification. The platform's automated validation does not inspect version numbers at all (agent-api §6.5.6) — this rule is a specification requirement upheld at manual review (see 16 §16.1 / §16.2) — while the App Center detects updates by comparing version numbers numerically, so a version that is not greater than the installed one will not reach existing users as an update.
 5. **Category Limit**: Each application may have at most 3 categories.
-6. **TOS Version**: `low_version` must be TOS 7.0 or higher.
+6. **TOS Version (`low_version`, optional)**: `low_version` is **not** a required field since the 20261019 revision — leaving it empty is allowed and does not block submission. When it is provided, it must be TOS 7.0 or higher.
 7. **Field Consistency**: `system_id` must match the systemd service filename, and `package` must match the `Package` field in DEBIAN/control. Keep the `version` field consistent between config.ini and DEBIAN/control — see 4.2.2.
 8. **Reserved `tos` Prefix**: `id` must not start with `tos`. The platform reserves the `tos` prefix in the nginx route/command namespace — an `id` starting with `tos` (e.g. `tos-log-server`) collides with the platform's own nginx entries, and the application page cannot be opened normally. The same prohibition applies to every nginx-related name derived from the App ID: the configuration file name `nginx/<app_id>.conf`, the route prefix `location /<app_id>/`, and any nginx command named after the App ID (FB-20261017-002; see 8.4.2 and 8.11). Because `id` cannot be modified after creation, fix the name before publishing (see 19 §19.1).
+9. **Help Documentation (`help`, required)**: since the 20261019 revision, `help` is a **required** field — every submission must provide the application's help documentation, wiki, or community tutorial URL.
 
 **`path` Field Value Quick Reference Table:**
 
@@ -575,16 +576,11 @@ The language file provides multilingual display support for the App Center. The 
 
 #### 8.5.1 Supported Languages
 
-The required language set depends on the target TOS version:
+**The documented baseline is the full 26-language set (supersets are allowed).** The 26 languages are the 14 languages shipped with TOS 7.0 plus the 12 languages added in TOS 7.1. Developers are expected to build the language set against the 26-language baseline from the start; the former "14 for TOS 7.0" requirement no longer applies.
 
-| Target TOS Version | Required Languages |
-|---|---|
-| TOS 7.0 | 14 |
-| TOS 7.1 | 26 |
+**Coverage is not mandatory.** A developer who does not need the application to be displayed in a particular language environment may simply omit that language from `app.lang`. Incomplete coverage is treated as a reminder, not a rejection ground: an `app.lang` containing fewer than 26 language sections is **not** rejected — review only reminds the developer to complete the 26-language set (see 8.5.9 and 16 §16.1 / §16.2).
 
-**The submitted language set must cover at least the required languages of the target TOS version; additional languages (supersets) are allowed.** Review validates against the minimum language count — if any required language node is missing, submission is blocked immediately.
-
-**TOS 7.0 Baseline Languages (14):**
+**TOS 7.0 Baseline Languages (14) — included in the 26-language set:**
 
 | Tag | Language |
 |---|---|
@@ -603,7 +599,7 @@ The required language set depends on the target TOS version:
 | `ru-ru` | Russian |
 | `pt-pt` | Portuguese |
 
-**TOS 7.1 Additional Languages (12):**
+**TOS 7.1 Additional Languages (12) — completing the 26-language set:**
 
 | Tag | Language |
 |---|---|
@@ -652,7 +648,7 @@ important = "用户需要注意的重要事项。"
 
 #### 8.5.4 Rules
 
-1. The submitted language set must cover at least the languages required by the target TOS version (14 for TOS 7.0, 26 for TOS 7.1); additional languages (supersets) are allowed. For untranslated languages, fill with English content — **leaving blank is prohibited**.
+1. The documented baseline is the full 26-language set (the 14 TOS 7.0 baseline languages plus the 12 TOS 7.1 additions); supersets are allowed. Coverage is **not mandatory**: an application that does not need to be displayed in a given language environment may simply omit that language. For every language section that is included, untranslated entries must be filled with English content — **leaving an included section's values blank is prohibited**. An `app.lang` with fewer than 26 language sections is not rejected; review only reminds the developer to complete the 26-language set (see 8.5.9).
 2. File encoding must be **UTF-8 without BOM**.
 3. The `descript` field semantics must be consistent across all languages.
 4. If the application name is a universal language name (not translated), the same value may be used for `name` across all languages. If the application name itself is a proper noun (such as a brand name or product name), the same name may be used across all languages without transliteration or translation.
@@ -678,6 +674,34 @@ The platform no longer sets a character limit on `name` / `auth` / `descript` / 
 
 - The `descript` field semantics must be consistent across all supported languages
 - Reviewers will verify translation accuracy for at least the core languages (zh-cn, en-us). Obvious errors in other languages will require the developer to correct them.
+
+---
+
+#### 8.5.9 Language Coverage and App Center Display Mechanism
+
+**1) How the App Center decides whether to display an application in the current language**
+
+Whether an application is visible under a given system language depends on **whether `app.lang` contains a section for that language**, together with the installation state:
+
+| Application state | Language situation | Display behavior |
+|---|---|---|
+| Not installed | `app.lang` **contains** the current system language | Displayed in that language environment |
+| Not installed | `app.lang` **does not contain** the current system language | **Not displayed** in that language environment — even if the application has already been published to the App Center |
+| Installed | Any system language | **Always displayed** in the installed-application list; switching the system language does not affect it |
+
+**2) Fallback (English) rule**
+
+- **Installed applications:** when the user switches to a language outside the 14 TOS 7.0 baseline languages, an installed application is displayed with **English** content as the fallback.
+- **Not-installed applications:** there is **no fallback**. An application whose `app.lang` does not contain the current system language is not displayed in that language environment at all, so the English fallback cannot take effect.
+- This is exactly why completing the 26-language set matters: the more languages `app.lang` covers, the more language environments the application can be discovered and installed from.
+
+**3) TOS 7.1 upgrade guidance for existing applications**
+
+After a system is upgraded to TOS 7.1, applications that still carry only the 14-language TOS 7.0 set remain displayable only in those 14 language environments — the 12 newly supported languages are not covered. Developers are advised to upgrade such applications and complete the 26-language set so that the applications are displayed in more language environments.
+
+**4) Review treatment**
+
+An `app.lang` covering fewer than 26 languages is **not** a rejection reason: review does not block the submission and only reminds the developer to complete the 26-language set (see 16 §16.1 / §16.2).
 
 ---
 
