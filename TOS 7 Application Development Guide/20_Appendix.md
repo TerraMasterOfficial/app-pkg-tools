@@ -178,6 +178,92 @@ auth = ""
 descript = ""
 release_note = ""
 important = ""
+
+; --- TOS 7.1 additional languages (12) — the documented baseline is the full 26-language set ---
+
+[cs-cz]
+name = ""
+auth = ""
+descript = ""
+release_note = ""
+important = ""
+
+[da-dk]
+name = ""
+auth = ""
+descript = ""
+release_note = ""
+important = ""
+
+[nl-nl]
+name = ""
+auth = ""
+descript = ""
+release_note = ""
+important = ""
+
+[nb-no]
+name = ""
+auth = ""
+descript = ""
+release_note = ""
+important = ""
+
+[sv-se]
+name = ""
+auth = ""
+descript = ""
+release_note = ""
+important = ""
+
+[el-gr]
+name = ""
+auth = ""
+descript = ""
+release_note = ""
+important = ""
+
+[ro-ro]
+name = ""
+auth = ""
+descript = ""
+release_note = ""
+important = ""
+
+[th-th]
+name = ""
+auth = ""
+descript = ""
+release_note = ""
+important = ""
+
+[vi-vn]
+name = ""
+auth = ""
+descript = ""
+release_note = ""
+important = ""
+
+[id-id]
+name = ""
+auth = ""
+descript = ""
+release_note = ""
+important = ""
+
+[ar-sa]
+name = ""
+auth = ""
+descript = ""
+release_note = ""
+important = ""
+
+[he-il]
+name = ""
+auth = ""
+descript = ""
+release_note = ""
+important = ""
 ```
 
 ### Appendix G: Shared Folder API (Deb Applications)
@@ -263,7 +349,7 @@ Key configuration options and their defaults.
 
 Complete downloadable config file templates for all app types are available on the TOS Developer Platform:
 - `config.ini` template (Deb WebUI Internal, Deb WebUI External, Deb No UI, Docker)
-- `app.lang` template (14-language quick template; see Appendix F)
+- `app.lang` template (26-language quick template — 14 TOS 7.0 baseline + 12 TOS 7.1 additions; see Appendix F)
 - Systemd unit file template (with security hardening)
 - DEBIAN/control template (single-package, dual-package)
 - Lifecycle script templates (preinst, postinst, prerm, postrm)
@@ -279,7 +365,7 @@ Complete downloadable config file templates for all app types are available on t
 | Single quotes in JSON | `'version': '1.0.0'` | Use double quotes: `"version": "1.0.0"` |
 | Trailing comma | `"beta": false,}` (comma on last field) | Remove trailing comma after the last field |
 | Hardcoded IP | `"path": "http://192.168.1.100:8080"` | Use placeholder: `"path": "http://${ip}:8080"` |
-| Missing languages | app.lang has only 12 languages | Add all language sections required by the target TOS version (14 for TOS 7.0; 26 for TOS 7.1), filling untranslated ones with English |
+| Missing languages | app.lang has only 12 languages | Aim at the documented 26-language set (14 TOS 7.0 baseline + 12 TOS 7.1 additions), filling untranslated ones with English. Coverage below 26 does not block submission — review only reminds the developer to complete it |
 | root in systemd | `User=root` in service file | Use dedicated user: `User=<appid>` |
 | Docker privileged mode | `privileged: true` in compose | Remove; use fine-grained capabilities |
 | Missing checksum | No .sha256 file submitted | Run `sha256sum <file> > <file>.sha256` |
@@ -303,7 +389,7 @@ Complete downloadable config file templates for all app types are available on t
 | **WebUI External Opening** | App frontend opens in a new browser tab | New tab mode, external mode |
 | **Reserved `tos` Prefix** | `tos` is reserved by the platform at the beginning of an nginx command / nginx-related name. The App ID (`config.ini.id`) and the nginx names derived from it (`nginx/<appid>.conf`, the route prefix `location /<appid>/`) must not start with `tos` (FB-20261017-002; see 08 §8.4.2 / §8.11) | `tos` prefix collision |
 | **No UI Service** | An app without a graphical interface; a background daemon service | Headless service, daemon |
-| **Minimum TOS Version** | The minimum TOS version required by the app; set in the `low_version` field of `config.ini`. | Min TOS version, TOS version requirement |
+| **Minimum TOS Version** | The minimum TOS version required by the app; set in the `low_version` field of `config.ini`. Since the 20261019 revision this field is **optional** — leaving it empty declares no minimum TOS version. | Min TOS version, TOS version requirement |
 
 ### Appendix M: Beta App Management
 
