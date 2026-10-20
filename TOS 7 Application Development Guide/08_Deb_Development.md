@@ -576,11 +576,9 @@ The language file provides multilingual display support for the App Center. The 
 
 #### 8.5.1 Supported Languages
 
-**The documented baseline is the full 26-language set (supersets are allowed).** The 26 languages are the 14 languages shipped with TOS 7.0 plus the 12 languages added in TOS 7.1. Developers are expected to build the language set against the 26-language baseline from the start; the former "14 for TOS 7.0" requirement no longer applies.
+**Write `app.lang` against the full 26-language set listed below.** Provide one section per language, using exactly these tags — they are the complete set the App Center recognises. Supersets are allowed.
 
-**Coverage is not mandatory.** A developer who does not need the application to be displayed in a particular language environment may simply omit that language from `app.lang`. Incomplete coverage is treated as a reminder, not a rejection ground: an `app.lang` containing fewer than 26 language sections is **not** rejected — review only reminds the developer to complete the 26-language set (see 8.5.9 and 16 §16.1 / §16.2).
-
-**TOS 7.0 Baseline Languages (14) — included in the 26-language set:**
+**Recommended: cover all 26 languages.** Coverage is **not mandatory** — if the application does not need to be displayed in a given language environment, simply omit that language; an `app.lang` containing fewer than 26 language sections is **not** rejected (review only reminds you to complete the set; see 8.5.9 and 16 §16.1 / §16.2).
 
 | Tag | Language |
 |---|---|
@@ -598,11 +596,6 @@ The language file provides multilingual display support for the App Center. The 
 | `tr-tr` | Turkish |
 | `ru-ru` | Russian |
 | `pt-pt` | Portuguese |
-
-**TOS 7.1 Additional Languages (12) — completing the 26-language set:**
-
-| Tag | Language |
-|---|---|
 | `cs-cz` | Czech |
 | `da-dk` | Danish |
 | `nl-nl` | Dutch |
@@ -616,7 +609,11 @@ The language file provides multilingual display support for the App Center. The 
 | `ar-sa` | Arabic |
 | `he-il` | Hebrew |
 
-**Required fields:** In every submitted language, `name` / `auth` / `descript` must not be empty; `release_note` / `important` may be empty.
+**Must:** in every language section you include, `name` / `auth` / `descript` must not be empty; `release_note` / `important` may be empty. An untranslated language may be filled with the English text — a blank or punctuation-only value is not accepted.
+
+**What a missing language means in practice** (details in 8.5.9): an application whose `app.lang` has no section for the current system language is **not displayed** in the App Center under that language, even if it has already been published; applications already installed on the device are always displayed and are unaffected by system-language switching.
+
+> **Background note — why 26 languages?** TOS 7.0 shipped 14 system languages, and the requirements at that time asked for those 14 only. TOS 7.1 adds 12 more, so this documentation now describes one 26-language set that serves both TOS versions — simply write against the table above without worrying about version differences. Applications built with the earlier 14 languages still install and run exactly as before; they are only displayed in those 14 language environments. When such an application is updated, completing the 26-language set is recommended so that it also becomes discoverable in the 12 newly supported language environments.
 
 #### 8.5.2 File Format
 
@@ -648,7 +645,7 @@ important = "用户需要注意的重要事项。"
 
 #### 8.5.4 Rules
 
-1. The documented baseline is the full 26-language set (the 14 TOS 7.0 baseline languages plus the 12 TOS 7.1 additions); supersets are allowed. Coverage is **not mandatory**: an application that does not need to be displayed in a given language environment may simply omit that language. For every language section that is included, untranslated entries must be filled with English content — **leaving an included section's values blank is prohibited**. An `app.lang` with fewer than 26 language sections is not rejected; review only reminds the developer to complete the 26-language set (see 8.5.9).
+1. Write `app.lang` against the full 26-language set defined in 8.5.1; supersets are allowed. Coverage is **not mandatory**: an application that does not need to be displayed in a given language environment may simply omit that language. For every language section that is included, untranslated entries must be filled with English content — **leaving an included section's values blank is prohibited**. An `app.lang` with fewer than 26 language sections is not rejected; review only reminds the developer to complete the 26-language set (see 8.5.9).
 2. File encoding must be **UTF-8 without BOM**.
 3. The `descript` field semantics must be consistent across all languages.
 4. If the application name is a universal language name (not translated), the same value may be used for `name` across all languages. If the application name itself is a proper noun (such as a brand name or product name), the same name may be used across all languages without transliteration or translation.
@@ -691,17 +688,24 @@ Whether an application is visible under a given system language depends on **whe
 
 **2) Fallback (English) rule**
 
-- **Installed applications:** when the user switches to a language outside the 14 TOS 7.0 baseline languages, an installed application is displayed with **English** content as the fallback.
+- **Installed applications:** if the user switches the system language to one whose section is **not** present in `app.lang`, the installed application is still displayed, with its **English** content as the fallback.
 - **Not-installed applications:** there is **no fallback**. An application whose `app.lang` does not contain the current system language is not displayed in that language environment at all, so the English fallback cannot take effect.
 - This is exactly why completing the 26-language set matters: the more languages `app.lang` covers, the more language environments the application can be discovered and installed from.
 
-**3) TOS 7.1 upgrade guidance for existing applications**
-
-After a system is upgraded to TOS 7.1, applications that still carry only the 14-language TOS 7.0 set remain displayable only in those 14 language environments — the 12 newly supported languages are not covered. Developers are advised to upgrade such applications and complete the 26-language set so that the applications are displayed in more language environments.
-
-**4) Review treatment**
+**3) Review treatment**
 
 An `app.lang` covering fewer than 26 languages is **not** a rejection reason: review does not block the submission and only reminds the developer to complete the 26-language set (see 16 §16.1 / §16.2).
+
+**4) Historical background and upgrade advice**
+
+*Why one list instead of two:* TOS 7.0 shipped 14 system languages, and the requirements of that period asked for those 14 only. TOS 7.1 adds 12 more, so this documentation describes a single 26-language set that serves both TOS versions — write against the table in 8.5.1 and ignore version differences. (Short version: see the background note at the end of 8.5.1.)
+
+*Upgrading an application whose `app.lang` still carries the original 14 languages:*
+
+1. **Add, do not rewrite.** Leave the 14 existing sections exactly as they are — same values, same order — and only append the remaining 12 sections using the tags listed in 8.5.1 (`cs-cz` … `he-il`).
+2. **Fill untranslated sections with English.** A newly added language you have not translated yet still needs non-empty `name` / `auth` / `descript`; put the English text in. Blank, punctuation-only, or missing values are not accepted (see 8.5.3).
+3. **The order is yours to choose.** There is no required sequence — prioritise the languages your users are most likely to use, and adding only part of the 12 is already useful (it is not a submission blocker). Keep the semantics of `descript` consistent across every language you provide (see 8.5.8).
+4. **What an incomplete set actually costs you — reach, nothing else.** In a system language that `app.lang` does not contain, an application that is not yet installed is **not displayed** in the App Center, even if it has been published (no English fallback applies in this case); applications **already installed** stay visible and fall back to English. Review does **not** reject a submission for covering fewer than 26 languages — it only reminds you to complete the set (behavior details in points 1–3 above).
 
 ---
 
