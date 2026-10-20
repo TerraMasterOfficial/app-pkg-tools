@@ -194,25 +194,26 @@ jobs:
           print('All validations passed!')
           "
 
-      - name: Check app.lang language coverage (advisory — 26 languages recommended; not a submission blocker)
+      - name: Check app.lang language coverage (advisory — the documented 26-language set is recommended; not a submission blocker)
         run: |
           python3 -c "
           import os
-          langs_tos70 = ['zh-cn', 'zh-hk', 'en-us', 'ko-kr', 'ja-jp', 'de-de',
-                         'fr-fr', 'it-it', 'es-es', 'hu-hu', 'pl-pl', 'tr-tr',
-                         'ru-ru', 'pt-pt']
-          langs_tos71_extra = ['cs-cz', 'da-dk', 'nl-nl', 'nb-no', 'sv-se', 'el-gr',
-                               'ro-ro', 'th-th', 'vi-vn', 'id-id', 'ar-sa', 'he-il']
-          recommended_langs = langs_tos70 + langs_tos71_extra
+          # The documented 26-language set (see 8.5.1). TOS 7.0 originally shipped the
+          # first 14 languages; TOS 7.1 adds the remaining 12.
+          baseline_langs = ['zh-cn', 'zh-hk', 'en-us', 'ko-kr', 'ja-jp', 'de-de',
+                            'fr-fr', 'it-it', 'es-es', 'hu-hu', 'pl-pl', 'tr-tr',
+                            'ru-ru', 'pt-pt', 'cs-cz', 'da-dk', 'nl-nl', 'nb-no',
+                            'sv-se', 'el-gr', 'ro-ro', 'th-th', 'vi-vn', 'id-id',
+                            'ar-sa', 'he-il']
           with open('app.lang', 'r') as f:
               content = f.read()
-          missing = [lang for lang in recommended_langs if f'[{lang}]' not in content]
+          missing = [lang for lang in baseline_langs if f'[{lang}]' not in content]
           if missing:
               missing_str = ', '.join(missing)
-              print(f'ADVISORY: {len(missing)} of the recommended 26 languages are missing: {missing_str}')
+              print(f'ADVISORY: {len(missing)} of the 26 documented languages are missing: {missing_str}')
               print('This is not a submission blocker — consider completing the 26-language set so the app is displayed in more language environments.')
           else:
-              print('All 26 recommended languages are present.')
+              print('All 26 documented languages are present.')
           "
 
       - name: Validate icon (SVG format)
