@@ -98,7 +98,7 @@
 After submission, the platform automatically performs the following checks:
 - File format validation (config.ini JSON syntax, app.lang format)
 - Field completeness validation (no missing required fields)
-- Language coverage validation (the language set required by the target TOS version — 14 for TOS 7.0, 26 for TOS 7.1; supersets allowed)
+- Language coverage check (documentation baseline: the 26-language set — 14 TOS 7.0 baseline languages + 12 TOS 7.1 additions; supersets allowed). Missing sections inside the 14-language TOS 7.0 baseline are still caught by the API (`invalid_language_files`); coverage below 26 is **not** a blocking error — review only reminds the developer to complete the 26-language set
 - Icon validation (SVG format, path matching)
 - Checksum verification (SHA-256 matches uploaded files)
 - Package type validation (the selected package's format matches the declared Deb / Docker application type)
