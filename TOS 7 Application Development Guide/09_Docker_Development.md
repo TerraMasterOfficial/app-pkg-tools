@@ -31,7 +31,7 @@ The Docker application is submitted as a `.tar.gz` archive. The archive must con
 | File | Required | Description |
 |------|----------|-------------|
 | `config.ini` | ✅ Yes | Application metadata configuration |
-| `<appid>.lang` | ✅ Yes | Multilingual file (14 languages required for TOS 7.0; 26 for TOS 7.1; supersets allowed) |
+| `<appid>.lang` | ✅ Yes | Multilingual file (26 languages required by the specification — 14 TOS 7.0 baseline languages plus 12 TOS 7.1 additions; supersets allowed, and a language may be omitted when the application does not need to be displayed in that language environment) |
 | `<appid>.svg` | ✅ Yes | Application icon (SVG format) |
 | `docker-compose.yml` | ✅ Yes | Container orchestration configuration |
 
