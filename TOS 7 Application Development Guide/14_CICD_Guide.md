@@ -177,7 +177,8 @@ jobs:
           python3 -c "
           import json
           config = json.load(open('config.ini'))
-          required = ['id', 'icon', 'publisher', 'exec', 'version', 'low_version',
+          # low_version is optional; help is a required field (20261019 revision)
+          required = ['id', 'icon', 'publisher', 'exec', 'version', 'help',
                       'category', 'platform', 'application_type', 'user']
           # 必填字段以用户确认清单为准
           for field in required:
@@ -193,7 +194,7 @@ jobs:
           print('All validations passed!')
           "
 
-      - name: Validate app.lang (required language coverage — 14 for TOS 7.0, 26 for TOS 7.1)
+      - name: Check app.lang language coverage (advisory — 26 languages recommended; not a submission blocker)
         run: |
           python3 -c "
           import os
@@ -202,13 +203,16 @@ jobs:
                          'ru-ru', 'pt-pt']
           langs_tos71_extra = ['cs-cz', 'da-dk', 'nl-nl', 'nb-no', 'sv-se', 'el-gr',
                                'ro-ro', 'th-th', 'vi-vn', 'id-id', 'ar-sa', 'he-il']
-          target = os.environ.get('TOS_TARGET_VERSION', '7.0')
-          required_langs = langs_tos70 + (langs_tos71_extra if target == '7.1' else [])
+          recommended_langs = langs_tos70 + langs_tos71_extra
           with open('app.lang', 'r') as f:
               content = f.read()
-          for lang in required_langs:
-              assert f'[{lang}]' in content, f'Missing language: {lang}'
-          print(f'At least {len(required_langs)} required languages present for TOS {target} (supersets allowed).')
+          missing = [lang for lang in recommended_langs if f'[{lang}]' not in content]
+          if missing:
+              missing_str = ', '.join(missing)
+              print(f'ADVISORY: {len(missing)} of the recommended 26 languages are missing: {missing_str}')
+              print('This is not a submission blocker — consider completing the 26-language set so the app is displayed in more language environments.')
+          else:
+              print('All 26 recommended languages are present.')
           "
 
       - name: Validate icon (SVG format)
