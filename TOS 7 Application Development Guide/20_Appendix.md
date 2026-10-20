@@ -179,7 +179,7 @@ descript = ""
 release_note = ""
 important = ""
 
-; --- TOS 7.1 additional languages (12) — the documented baseline is the full 26-language set ---
+; --- The remaining 12 languages; the documented baseline is the full 26-language set (see 8.5.1) ---
 
 [cs-cz]
 name = ""
@@ -349,7 +349,7 @@ Key configuration options and their defaults.
 
 Complete downloadable config file templates for all app types are available on the TOS Developer Platform:
 - `config.ini` template (Deb WebUI Internal, Deb WebUI External, Deb No UI, Docker)
-- `app.lang` template (26-language quick template — 14 TOS 7.0 baseline + 12 TOS 7.1 additions; see Appendix F)
+- `app.lang` template (26-language quick template; see Appendix F and 8.5.1)
 - Systemd unit file template (with security hardening)
 - DEBIAN/control template (single-package, dual-package)
 - Lifecycle script templates (preinst, postinst, prerm, postrm)
@@ -365,7 +365,7 @@ Complete downloadable config file templates for all app types are available on t
 | Single quotes in JSON | `'version': '1.0.0'` | Use double quotes: `"version": "1.0.0"` |
 | Trailing comma | `"beta": false,}` (comma on last field) | Remove trailing comma after the last field |
 | Hardcoded IP | `"path": "http://192.168.1.100:8080"` | Use placeholder: `"path": "http://${ip}:8080"` |
-| Missing languages | app.lang has only 12 languages | Aim at the documented 26-language set (14 TOS 7.0 baseline + 12 TOS 7.1 additions), filling untranslated ones with English. Coverage below 26 does not block submission — review only reminds the developer to complete it |
+| Missing languages | app.lang has only 12 languages | Aim at the documented 26-language set (see 8.5.1 and Appendix F), filling untranslated ones with English. Coverage below 26 does not block submission — review only reminds the developer to complete it |
 | root in systemd | `User=root` in service file | Use dedicated user: `User=<appid>` |
 | Docker privileged mode | `privileged: true` in compose | Remove; use fine-grained capabilities |
 | Missing checksum | No .sha256 file submitted | Run `sha256sum <file> > <file>.sha256` |
