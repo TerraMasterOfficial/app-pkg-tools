@@ -16,7 +16,7 @@
 |---|---|---|---|
 | Valid JSON syntax (no comments, no trailing commas, no single quotes outside double quotes) | Validate using `python3 -m json.tool` | 8.4 config.ini Specification | Yes — `invalid_config_ini` (the file is parsed as JSON) |
 | No single quotes, no inline comments | JSON standard only allows double quotes; `//` or `/* */` are treated as comments | 8.4 config.ini Specification | Yes — `invalid_config_ini` (single quotes and comments simply fail JSON parsing; there is no separate check) |
-| All required fields present (id/icon/publisher/exec/version/low_version/category/platform/application_type/user) | Check against the user-confirmed required fields checklist item by item (必填字段以用户确认清单为准) | 8.4.3 Key Rules | Yes — `invalid_config_ini` requires the same ten fields to exist and be non-empty, and additionally requires each value to match its type convention (e.g. a boolean field may not be written as a string) |
+| All required fields present (id/icon/publisher/exec/version/help/category/platform/application_type/user) | Check against the user-confirmed required fields checklist item by item (必填字段以用户确认清单为准). `low_version` is optional and is no longer part of the required set (20261019 revision) | 8.4.3 Key Rules | Yes — `invalid_config_ini` requires the same ten fields to exist and be non-empty, and additionally requires each value to match its type convention (e.g. a boolean field may not be written as a string) |
 | type and open_path are mutually exclusive (both cannot exist) | Deb iframe apps use the `type` field; Deb external-open and Docker apps use the `open_path` field. They are mutually exclusive and cannot coexist | 8.4.2 Field Reference | No — manual review / specification requirement (agent-api §6.5.6: no `config.ini` field other than `id` / `application_type` / `platform` is ever evaluated) |
 | `open_path` must be `true` for Docker apps with a UI, with `path` set to `http://${ip}:<port>` | Mutual exclusion is not the whole rule: a Docker application has no iframe UI, so `open_path: true` is **mandatory**. Omitting it leaves the app opening as an embedded iframe whose page cannot render (rejection code `tool-C23` — see Appendix N) | 8.4.2 Field Reference / 9.3 | No — manual review / specification requirement (same agent-api §6.5.6 scope: field *values* are never evaluated) |
 | path field must use `${ip}` placeholder; no hardcoded IP or domain | URL-type path may be written as `http://${ip}:<port>`; the route form `/<app_id>/` is also accepted | 8.4.3 Key Rules | No — manual review / specification requirement (agent-api §6.5.6, same reason as the row above) |
@@ -27,7 +27,7 @@
 
 | Check Item | Description | Reference | API Auto-Check |
 |---|---|---|---|
-| Language coverage covers the language set required by the target TOS version (14 for TOS 7.0, 26 for TOS 7.1; supersets allowed) | Missing any required language node results in immediate blocking | 8.5 app.lang Specification | Partial — `invalid_language_files` requires all 14 TOS 7.0 sections (zh-cn, zh-hk, en-us, fr-fr, de-de, it-it, es-es, hu-hu, ja-jp, ko-kr, pl-pl, ru-ru, tr-tr, pt-pt); sections outside those 14 are neither checked nor rejected. The 26-language TOS 7.1 coverage is a specification requirement not yet enforced by the API (agent-api §6.5.4) |
+| Language coverage — documentation baseline is the 26-language set (14 TOS 7.0 baseline languages + 12 TOS 7.1 additions; supersets allowed) | Coverage is **not** a blocking item: an `app.lang` with fewer than 26 language sections is not rejected, and review only reminds the developer to complete the 26-language set. A language may be omitted when the application does not need to be displayed in that language environment | 8.5 app.lang Specification / 8.5.9 | Partial — `invalid_language_files` requires all 14 TOS 7.0 sections (zh-cn, zh-hk, en-us, fr-fr, de-de, it-it, es-es, hu-hu, ja-jp, ko-kr, pl-pl, ru-ru, tr-tr, pt-pt); sections outside those 14 are neither checked nor rejected. The 26-language coverage is a specification requirement not yet enforced by the API (agent-api §6.5.4) |
 | name / auth / descript fields non-empty for all languages; release_note / important may be empty | Every submitted language must contain non-empty content; blank strings and punctuation-only placeholders are not accepted. Filling an untranslated language with the English text (an English copy) is accepted | 8.5.3 Field Descriptions | Yes — `invalid_language_files` requires `name` / `auth` / `descript` to be non-empty and treats `release_note` as optional |
 | File encoding is UTF-8 without BOM | EF BB BF bytes not allowed at file header | 8.5.5 File Encoding & Format | No — manual review / specification requirement (the API runs no encoding check) |
 | All line endings must be LF (\\n); CRLF (\\r\\n) prohibited | A common cross-platform collaboration issue; Windows developers must pay extra attention | 4.6 Cross-Platform Line Ending Specification | No — manual review / specification requirement (the API runs no line-ending check) |
@@ -92,7 +92,7 @@
 
 | Dimension | Review Content | Reviewer |
 |---|---|---|
-| **Configuration Completeness** | config.ini correct JSON format, app.lang covering the language set required by the target TOS version (14 / 26), required package metadata files complete (config.ini / `<appid>.lang` / icon), SVG-compliant icon within the accepted size range (≤ 50 KB), no missing required fields, valid systemd service file, App ID and the nginx names derived from it (`nginx/<appid>.conf`, the route prefix) do not start with the reserved `tos` prefix (FB-20261017-002) | Dedicated Review Staff |
+| **Configuration Completeness** | config.ini correct JSON format, app.lang covering the documented 26-language baseline (14 TOS 7.0 baseline + 12 TOS 7.1 additions — coverage is a reminder only, not a rejection ground; see 8.5.9), required package metadata files complete (config.ini / `<appid>.lang` / icon), SVG-compliant icon within the accepted size range (≤ 50 KB), no missing required fields (`low_version` optional, `help` required since the 20261019 revision), valid systemd service file, App ID and the nginx names derived from it (`nginx/<appid>.conf`, the route prefix) do not start with the reserved `tos` prefix (FB-20261017-002) | Dedicated Review Staff |
 | **Functional Availability** | Install/start/stop/uninstall complete without errors, correct architecture adaptation, functionality matches description, ports available without conflicts | Testing Support Staff |
 | **Security** | No hardcoded credentials, non-root execution, no privileged mode, no malicious code, no vulnerabilities, no prohibited scripts, hash verification passed | Technical Support Staff |
 | **Compliance** | Content is legal and compliant, no intellectual property infringement, description matches functionality, repository is public, directory structure conforms to specification | Dedicated Review Staff |
@@ -106,7 +106,7 @@
 **config.ini:**
 - JSON without comments (`//`, `/* */`), no trailing commas
 - No single quotes; all strings use double quotes
-- All required fields present: `id` / `icon` / `publisher` / `exec` / `version` / `low_version` / `category` / `platform` / `application_type` / `user` (必填字段以用户确认清单为准)
+- All required fields present: `id` / `icon` / `publisher` / `exec` / `version` / `help` / `category` / `platform` / `application_type` / `user` (必填字段以用户确认清单为准); `low_version` is optional since the 20261019 revision and is no longer part of the required set — leaving it empty does not block submission
 - `type` and `open_path` are mutually exclusive: Deb iframe apps use `type` only; Deb external-open and Docker apps use `open_path` only; the two must not coexist
 - Docker apps with a UI must set `open_path: true` (and `path: "http://${ip}:<port>"`) — rejection code `tool-C23`; see 9.3 and 16.1
 - `path` field must use `${ip}` placeholder; hardcoded IP, domain, or localhost is prohibited
@@ -116,11 +116,12 @@
 - See 8.4 config.ini Specification
 
 **app.lang:**
-- Language set covers at least the languages required by the target TOS version (14 for TOS 7.0, 26 for TOS 7.1; supersets allowed) — TOS 7.0 baseline: zh-cn, zh-hk, en-us, ko-kr, ja-jp, de-de, fr-fr, it-it, es-es, hu-hu, pl-pl, tr-tr, ru-ru, pt-pt; TOS 7.1 additional: cs-cz, da-dk, nl-nl, nb-no, sv-se, el-gr, ro-ro, th-th, vi-vn, id-id, ar-sa, he-il
+- Language set documentation baseline is the full 26-language set (14 TOS 7.0 baseline + 12 TOS 7.1 additions; supersets allowed) — TOS 7.0 baseline: zh-cn, zh-hk, en-us, ko-kr, ja-jp, de-de, fr-fr, it-it, es-es, hu-hu, pl-pl, tr-tr, ru-ru, pt-pt; TOS 7.1 additional: cs-cz, da-dk, nl-nl, nb-no, sv-se, el-gr, ro-ro, th-th, vi-vn, id-id, ar-sa, he-il
+- **Incomplete 26-language coverage is NOT a rejection ground.** Coverage is a reminder item: when an `app.lang` contains fewer than 26 language sections, review does not reject the submission — it only reminds the developer to complete the 26-language set so the application is displayed in more language environments. A developer who does not need a given language environment may omit that language (see 8.5.9)
 - `name` / `auth` / `descript` fields non-empty for all languages (`release_note` / `important` may be empty); blank strings and punctuation-only placeholders are not accepted — filling an untranslated language with the English text (an English copy) is acceptable
 - File encoding UTF-8 without BOM
 - All line endings LF (`\n`); CRLF (`\r\n`) prohibited
-- Note: automated validation currently enforces the 14-section TOS 7.0 set only (agent-api §6.5.4); the TOS 7.1 26-language coverage is verified here at manual review
+- Note: automated validation currently enforces the 14-section TOS 7.0 set only (agent-api §6.5.4); the 26-language coverage is a specification requirement not yet enforced by the API (see 8.5.9)
 - See 8.5 app.lang Specification
 
 **Icon:**
@@ -225,7 +226,7 @@ Each position provides a clear review opinion (approve/reject with specific reas
 | Rank | Rejection Reason | Correction Suggestion | Applicable Scope | Reference |
 |---|---|---|---|---|
 | 1 | config.ini contains comments, syntax errors, or missing fields (this issue is intercepted during the automated validation phase; developers receive an immediate prompt after submission.) | Remove all comments; validate JSON format with `python3 -m json.tool` | All apps | 8.4 config.ini Specification |
-| 2 | app.lang is missing language nodes or has empty fields | Complete the languages required by the target TOS version (14 for TOS 7.0, 26 for TOS 7.1; supersets allowed); fill untranslated ones with English | All apps | 8.5 app.lang Specification |
+| 2 | app.lang is missing language nodes or has empty fields | Complete the recommended 26-language set (14 TOS 7.0 baseline + 12 TOS 7.1 additions; supersets allowed) — incomplete coverage does **not** block submission, review only reminds the developer to complete it; fill any included untranslated language with English | All apps | 8.5 app.lang Specification / 8.5.9 |
 | 3 | Docker compose image source is not from Docker Hub | Host images on Docker Hub; ghcr.io / private registries are prohibited | Docker only | 9.4 Image & Security Requirements |
 | 4 | Repository is not public or resources are missing | Set repository to public; upload complete resources (README/source code/configurations) | All apps | 15.2 Repository Requirements |
 | 5 | App functionality description does not match actual functionality | Correct the `descript` field in app.lang to ensure descriptions are verifiable | All apps | 8.5.3 Field Descriptions |
