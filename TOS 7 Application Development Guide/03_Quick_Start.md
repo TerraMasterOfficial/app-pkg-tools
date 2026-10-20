@@ -74,7 +74,7 @@ curl http://localhost:<port>/health
 Before submitting to the review platform, verify the following items:
 
 - [ ] `config.ini` is valid JSON format (no comments, no trailing commas, double quotes only)
-- [ ] `app.lang` covers the 26 languages required by this documentation (TOS 7.0 baseline 14 languages + TOS 7.1 additional 12; supersets are allowed). Coverage is not a pass/fail gate — an `app.lang` with fewer than 26 languages will not be rejected, review will merely remind you to complete them, and a language may be omitted when the application does not need to be displayed in that language environment; `name` / `auth` / `descript` are non-empty in every submitted language — blank strings and punctuation-only placeholders are not accepted, while filling an untranslated language with the English text is acceptable
+- [ ] `app.lang` covers the 26 languages defined in this documentation (supersets are allowed). Coverage is not a pass/fail gate — an `app.lang` with fewer than 26 languages will not be rejected, review will merely remind you to complete them, and a language may be omitted when the application does not need to be displayed in that language environment (see 8.5.9); `name` / `auth` / `descript` are non-empty in every submitted language — blank strings and punctuation-only placeholders are not accepted, while filling an untranslated language with the English text is acceptable
 - [ ] Icon is in SVG format, stored at `/images/icons/<appid>.svg`
 - [ ] systemd service file `User` is not `root`
 - [ ] Version number complies with 4.2 (allowed characters, numerically comparable) and increases numerically, and is consistent across `config.ini` and `DEBIAN/control`
